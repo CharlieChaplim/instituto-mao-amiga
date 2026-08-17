@@ -1,66 +1,46 @@
-# Exercício Prático — Aula 03
+# Exercício Prático — Aula 05
 
-**Nome:** José Roberto Santos Nascimento
-**Data:** 04/08/2026
+**Nome:** José Roberto Santos Nascimento  
+**Data:** 17/08/2026
 
-## 1. Qual prop nova você acrescentou?
+## 1. Descreva as 2 telas e o que cada uma faz:
 
-Acrescentei a prop `categoria`, que representa o tipo ao qual o produto
-pertence, como móveis, iluminação ou acessórios.
+A primeira tela é a lista de pontos de coleta e distribuição do Instituto Mão Amiga. Ela mostra os pontos cadastrados nos dados mockados e permite tocar em qualquer um deles para abrir seus detalhes.
 
-## 2. Qual estado novo você acrescentou?
+A segunda tela é a tela de detalhe do ponto. Ela recebe o identificador do ponto selecionado, encontra o ponto correspondente na lista de dados mockados e mostra seu nome, endereço, dias e horários e o que ele recebe ou distribui.
 
-Acrescentei o estado `quantidade`. Ele começa em zero e muda quando o usuário
-pressiona os botões de aumentar ou diminuir a quantidade do produto.
+## 2. Qual parâmetro é passado da Tela 1 para a Tela 2:
 
-## 3. Por que cada dado foi definido como prop ou estado?
+O parâmetro passado é `pontoId`, que contém o `id` do ponto selecionado na lista.
 
-A categoria foi definida como prop porque vem da lista de produtos e o
-`ProdutoItem` somente exibe essa informação. A quantidade foi definida como
-estado porque pertence a cada item e pode mudar durante o uso do aplicativo.
+## 3. O que muda na Tela 2 por causa do parâmetro recebido:
 
-## 4. Código da extensão do ProdutoItem
+A Tela 2 procura em `pontosMock` o ponto cujo `id` é igual ao `pontoId` recebido. Por isso, o conteúdo exibido muda de acordo com o ponto tocado na Tela 1, em vez de mostrar sempre o mesmo ponto.
 
-```jsx
-function ProdutoItem({ produto, categoria }) {
-  const [favorito, setFavorito] = useState(false);
-  const [quantidade, setQuantidade] = useState(0);
+## 4. Cole aqui o código de navegação (o `navigate` e a leitura do `route.params`):
 
-  function diminuirQuantidade() {
-    if (quantidade > 0) {
-      setQuantidade(quantidade - 1);
-    }
+```tsx
+onPress={() =>
+  navigation.navigate('Detalhe', { pontoId: ponto.id })
+}
+```
+
+```tsx
+function TelaDetalhePonto({ route }: DetalheProps) {
+  const { pontoId } = route.params;
+  const ponto = pontosMock.find((item) => item.id === pontoId);
+
+  if (!ponto) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.titulo}>Ponto não encontrado.</Text>
+      </View>
+    );
   }
 
   return (
-    <View style={styles.item}>
-      <Image source={{ uri: produto.imagem }} style={styles.imagem} />
-
-      <View style={styles.info}>
-        <Text style={styles.nome}>{produto.nome}</Text>
-        <Text style={styles.categoria}>{categoria}</Text>
-        <Text style={styles.preco}>{produto.preco}</Text>
-
-        <View style={styles.quantidade}>
-          <Button
-            title="-"
-            onPress={diminuirQuantidade}
-            disabled={quantidade === 0}
-          />
-
-          <Text style={styles.numero}>{quantidade}</Text>
-
-          <Button
-            title="+"
-            onPress={() => setQuantidade(quantidade + 1)}
-          />
-        </View>
-      </View>
-
-      <Button
-        title={favorito ? '♥' : '♡'}
-        onPress={() => setFavorito(!favorito)}
-      />
+    <View style={styles.container}>
+      <ItemDetalhe ponto={ponto} />
     </View>
   );
 }
