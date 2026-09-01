@@ -43,7 +43,7 @@ const pontosMock: Ponto[] = [
     endereco: 'Av. Goiás, 1.000 - Setor Central, Goiânia - GO',
     horario: 'Segunda a sexta, das 8h às 17h',
     atendimento:
-      'Recebe alimentos não perecíveis e produtos de higiene.',
+      'Recebe alimentos não perecíveis e produtos de higiene básica.',
   },
   {
     id: '2',
