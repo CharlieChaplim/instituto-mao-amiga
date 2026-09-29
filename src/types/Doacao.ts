@@ -1,6 +1,9 @@
 export type Doacao = {
-  nome: string;
-  item: string;
-  quantidade: string;
-  observacao: string;
+  id: string;
+  tipoItem: string;
+  quantidade: number;
+  pontoDestino: string;
+  criadoEm: string;
 };
+
+export type NovaDoacao = Omit<Doacao, 'id' | 'criadoEm'>;
