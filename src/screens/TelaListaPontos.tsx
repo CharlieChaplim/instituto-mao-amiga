@@ -1,6 +1,14 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { PontoItem } from '../components/PontoItem';
 import { pontosMock } from '../data/pontos';
 import { RootStackParamList } from '../types/navigation';
@@ -9,7 +17,10 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Lista'>;
 
 export function TelaListaPontos({ navigation }: Props) {
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={['bottom', 'left', 'right']}
+    >
       <View style={styles.container}>
         <FlatList
           data={pontosMock}
@@ -17,17 +28,35 @@ export function TelaListaPontos({ navigation }: Props) {
           renderItem={({ item }) => (
             <PontoItem
               ponto={item}
-              onPress={() => navigation.navigate('Detalhe', { pontoId: item.id })}
+              onPress={() =>
+                navigation.navigate('Detalhe', {
+                  pontoId: item.id,
+                })
+              }
             />
           )}
           ListHeaderComponent={
             <View>
-              <Text style={styles.titulo}>Pontos de coleta e distribuição</Text>
+              <Text style={styles.titulo}>
+                Pontos de coleta e distribuição
+              </Text>
+
               <TouchableOpacity
                 style={styles.botao}
                 onPress={() => navigation.navigate('Cadastro')}
               >
-                <Text style={styles.textoBotao}>Criar doação</Text>
+                <Text style={styles.textoBotao}>
+                  Criar doação
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.botaoHistorico}
+                onPress={() => navigation.navigate('Historico')}
+              >
+                <Text style={styles.textoBotaoHistorico}>
+                  Minhas doações
+                </Text>
               </TouchableOpacity>
             </View>
           }
@@ -43,21 +72,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+
   lista: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 32,
   },
+
   titulo: {
     marginBottom: 16,
     fontSize: 22,
     fontWeight: 'bold',
     color: '#1B3A5C',
   },
+
   botao: {
     width: '100%',
     minHeight: 44,
@@ -69,9 +102,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   textoBotao: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+
+  botaoHistorico: {
+    width: '100%',
+    minHeight: 44,
+    marginBottom: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#1B3A5C',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  textoBotaoHistorico: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1B3A5C',
   },
 });
