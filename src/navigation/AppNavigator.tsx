@@ -5,6 +5,7 @@ import { TelaDetalhePonto } from '../screens/TelaDetalhePonto';
 import { TelaListaPontos } from '../screens/TelaListaPontos';
 import { RootStackParamList } from '../types/navigation';
 import { TelaHistoricoDoacoes } from '../screens/TelaHistoricoDoacoes';
+import { TelaDetalheDoacao } from '../screens/TelaDetalheDoacao';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -31,6 +32,11 @@ export function AppNavigator() {
           name="Historico"
           component={TelaHistoricoDoacoes}
           options={{ title: 'Minhas doações' }}
+        />
+        <Stack.Screen
+          name="DetalheDoacao"
+          component={TelaDetalheDoacao}
+          options={{ title: 'Detalhe da doação' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

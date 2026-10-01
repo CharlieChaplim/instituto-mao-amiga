@@ -1,15 +1,27 @@
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 
 import { Doacao } from '../types/Doacao';
 
 type Props = {
   doacao: Doacao;
+  onPress: () => void;
 };
 
-function DoacaoItemComponent({ doacao }: Props) {
+function DoacaoItemComponent({
+  doacao,
+  onPress,
+}: Props) {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+    >
       <Text style={styles.tipo}>
         {doacao.tipoItem}
       </Text>
@@ -25,7 +37,7 @@ function DoacaoItemComponent({ doacao }: Props) {
       <Text style={styles.data}>
         {new Date(doacao.criadoEm).toLocaleString('pt-BR')}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -33,6 +45,7 @@ export const DoacaoItem = memo(DoacaoItemComponent);
 
 const styles = StyleSheet.create({
   card: {
+    minHeight: 44,
     marginBottom: 12,
     padding: 16,
     borderWidth: 1,

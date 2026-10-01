@@ -55,7 +55,14 @@ export function TelaHistoricoDoacoes({
         data={doacoes}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <DoacaoItem doacao={item} />
+          <DoacaoItem
+            doacao={item}
+            onPress={() =>
+              navigation.navigate('DetalheDoacao', {
+                doacao: item,
+              })
+            }
+          />
         )}
         contentContainerStyle={
           doacoes.length === 0
