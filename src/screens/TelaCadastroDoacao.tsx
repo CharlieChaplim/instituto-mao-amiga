@@ -14,15 +14,37 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { salvarDoacao } from '../storage/doacoesStorage';
+import {
+  atualizarDoacao,
+  salvarDoacao,
+} from '../storage/doacoesStorage';
+
 import { RootStackParamList } from '../types/navigation';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Cadastro'>;
+type Props = NativeStackScreenProps<
+  RootStackParamList,
+  'Cadastro'
+>;
 
-export function TelaCadastroDoacao({ navigation }: Props) {
-  const [tipoItem, setTipoItem] = useState('');
-  const [quantidade, setQuantidade] = useState('');
-  const [pontoDestino, setPontoDestino] = useState('');
+export function TelaCadastroDoacao({
+  navigation,
+  route,
+}: Props) {
+  const doacaoEmEdicao = route.params?.doacao;
+
+  const [tipoItem, setTipoItem] = useState(
+    doacaoEmEdicao?.tipoItem ?? ''
+  );
+
+  const [quantidade, setQuantidade] = useState(
+    doacaoEmEdicao
+      ? String(doacaoEmEdicao.quantidade)
+      : ''
+  );
+
+  const [pontoDestino, setPontoDestino] = useState(
+    doacaoEmEdicao?.pontoDestino ?? ''
+  );
 
   async function cadastrarDoacao() {
     if (
@@ -34,6 +56,7 @@ export function TelaCadastroDoacao({ navigation }: Props) {
         'Campos obrigatórios',
         'Preencha todos os campos.'
       );
+
       return;
     }
 
@@ -45,10 +68,33 @@ export function TelaCadastroDoacao({ navigation }: Props) {
         'Quantidade inválida',
         'Informe uma quantidade inteira maior que zero.'
       );
+
       return;
     }
 
     try {
+      if (doacaoEmEdicao) {
+        await atualizarDoacao({
+          ...doacaoEmEdicao,
+          tipoItem: tipoItem.trim(),
+          quantidade: Number(quantidade),
+          pontoDestino: pontoDestino.trim(),
+        });
+
+        Alert.alert(
+          'Doação atualizada',
+          'As alterações foram salvas.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+
+        return;
+      }
+
       await salvarDoacao({
         tipoItem: tipoItem.trim(),
         quantidade: Number(quantidade),
@@ -68,7 +114,9 @@ export function TelaCadastroDoacao({ navigation }: Props) {
     } catch {
       Alert.alert(
         'Erro',
-        'Não foi possível salvar a doação.'
+        doacaoEmEdicao
+          ? 'Não foi possível atualizar a doação.'
+          : 'Não foi possível salvar a doação.'
       );
     }
   }
@@ -80,14 +128,20 @@ export function TelaCadastroDoacao({ navigation }: Props) {
     >
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : 'height'
+        }
       >
         <ScrollView
           contentContainerStyle={styles.formulario}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.titulo}>
-            Cadastrar doação
+            {doacaoEmEdicao
+              ? 'Editar doação'
+              : 'Cadastrar doação'}
           </Text>
 
           <Text style={styles.rotulo}>
@@ -131,9 +185,22 @@ export function TelaCadastroDoacao({ navigation }: Props) {
             onPress={cadastrarDoacao}
           >
             <Text style={styles.textoBotao}>
-              Cadastrar
+              {doacaoEmEdicao
+                ? 'Salvar alterações'
+                : 'Cadastrar'}
             </Text>
           </TouchableOpacity>
+
+          {doacaoEmEdicao ? (
+            <TouchableOpacity
+              style={styles.botaoCancelar}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.textoCancelar}>
+                Cancelar
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -198,5 +265,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+
+  botaoCancelar: {
+    width: '100%',
+    minHeight: 44,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#777777',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  textoCancelar: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#555555',
   },
 });

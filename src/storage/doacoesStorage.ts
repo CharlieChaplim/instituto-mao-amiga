@@ -34,7 +34,12 @@ export async function salvarDoacao(
     JSON.stringify([...doacoes, novaDoacao])
   );
 
-export async function excluirDoacao(id: string): Promise<void> {
+  return novaDoacao;
+}
+
+export async function excluirDoacao(
+  id: string
+): Promise<void> {
   const doacoes = await listarDoacoes();
 
   const atualizadas = doacoes.filter(
@@ -47,5 +52,19 @@ export async function excluirDoacao(id: string): Promise<void> {
   );
 }
 
-  return novaDoacao;
+export async function atualizarDoacao(
+  doacaoAtualizada: Doacao
+): Promise<void> {
+  const doacoes = await listarDoacoes();
+
+  const atualizadas = doacoes.map((doacao) =>
+    doacao.id === doacaoAtualizada.id
+      ? doacaoAtualizada
+      : doacao
+  );
+
+  await AsyncStorage.setItem(
+    CHAVE_DOACOES,
+    JSON.stringify(atualizadas)
+  );
 }

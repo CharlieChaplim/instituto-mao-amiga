@@ -1,4 +1,6 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useCallback, useState } from 'react';
 
 import {
   Alert,
@@ -10,7 +12,11 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { excluirDoacao } from '../storage/doacoesStorage';
+import {
+  excluirDoacao,
+  listarDoacoes,
+} from '../storage/doacoesStorage';
+
 import { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<
@@ -22,7 +28,27 @@ export function TelaDetalheDoacao({
   route,
   navigation,
 }: Props) {
-  const { doacao } = route.params;
+  const doacaoInicial = route.params.doacao;
+
+  const [doacao, setDoacao] = useState(doacaoInicial);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function atualizarDetalhe() {
+        const doacoes = await listarDoacoes();
+
+        const atualizada = doacoes.find(
+          (item) => item.id === doacaoInicial.id
+        );
+
+        if (atualizada) {
+          setDoacao(atualizada);
+        }
+      }
+
+      atualizarDetalhe();
+    }, [doacaoInicial.id])
+  );
 
   function confirmarExclusao() {
     Alert.alert(
@@ -39,6 +65,7 @@ export function TelaDetalheDoacao({
           onPress: async () => {
             try {
               await excluirDoacao(doacao.id);
+
               navigation.goBack();
             } catch {
               Alert.alert(
@@ -80,6 +107,19 @@ export function TelaDetalheDoacao({
         </Text>
 
         <TouchableOpacity
+          style={styles.botaoEditar}
+          onPress={() =>
+            navigation.navigate('Cadastro', {
+              doacao,
+            })
+          }
+        >
+          <Text style={styles.textoEditar}>
+            Editar doação
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.botaoExcluir}
           onPress={confirmarExclusao}
         >
@@ -116,9 +156,24 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
 
-  botaoExcluir: {
+  botaoEditar: {
     minHeight: 44,
     marginTop: 20,
+    borderRadius: 8,
+    backgroundColor: '#1B3A5C',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  textoEditar: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+
+  botaoExcluir: {
+    minHeight: 44,
+    marginTop: 12,
     borderRadius: 8,
     backgroundColor: '#C62828',
     justifyContent: 'center',
