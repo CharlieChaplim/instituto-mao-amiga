@@ -51,6 +51,45 @@ export function TelaHistoricoDoacoes({
     );
   }, [busca, doacoes]);
 
+  const resumoPorTipo = useMemo(() => {
+    const totais = new Map<
+      string,
+      {
+        tipo: string;
+        quantidade: number;
+        doacoes: number;
+      }
+    >();
+
+    for (const doacao of doacoes) {
+      const chave = doacao.tipoItem
+        .trim()
+        .toLocaleLowerCase('pt-BR');
+
+      const atual = totais.get(chave);
+
+      if (atual) {
+        atual.quantidade += doacao.quantidade;
+        atual.doacoes += 1;
+      } else {
+        totais.set(chave, {
+          tipo: doacao.tipoItem.trim(),
+          quantidade: doacao.quantidade,
+          doacoes: 1,
+        });
+      }
+    }
+
+    return Array.from(totais.entries())
+      .map(([chave, valor]) => ({
+        chave,
+        ...valor,
+      }))
+      .sort((a, b) =>
+        a.tipo.localeCompare(b.tipo, 'pt-BR')
+      );
+  }, [doacoes]);
+
   async function carregarDoacoes() {
     try {
       const dados = await listarDoacoes();
@@ -101,6 +140,39 @@ export function TelaHistoricoDoacoes({
               <Text style={styles.titulo}>
                 Minhas doações
               </Text>
+
+              <View style={styles.resumo}>
+                <Text style={styles.tituloResumo}>
+                  Resumo
+                </Text>
+
+                <Text style={styles.totalDoacoes}>
+                  Total de doações: {doacoes.length}
+                </Text>
+
+                {resumoPorTipo.map((item) => (
+                  <View
+                    key={item.chave}
+                    style={styles.itemResumo}
+                  >
+                    <Text style={styles.tipoResumo}>
+                      {item.tipo}
+                    </Text>
+
+                    <Text style={styles.textoResumo}>
+                      {item.quantidade}{' '}
+                      {item.quantidade === 1
+                        ? 'unidade'
+                        : 'unidades'}
+                      {' em '}
+                      {item.doacoes}{' '}
+                      {item.doacoes === 1
+                        ? 'doação'
+                        : 'doações'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
 
               <TextInput
                 style={styles.busca}
@@ -174,6 +246,43 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: '#1B3A5C',
+  },
+
+  resumo: {
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 10,
+    backgroundColor: '#F3F6F8',
+  },
+
+  tituloResumo: {
+    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1B3A5C',
+  },
+
+  totalDoacoes: {
+    marginBottom: 12,
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+
+  itemResumo: {
+    marginBottom: 10,
+  },
+
+  tipoResumo: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+
+  textoResumo: {
+    marginTop: 2,
+    fontSize: 14,
+    color: '#555555',
   },
 
   busca: {
