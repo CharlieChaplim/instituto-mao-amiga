@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
   Alert,
@@ -14,65 +14,96 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { carregarDoacao, salvarDoacao } from '../storage/doacaoStorage';
-import { registrarDoacao } from '../storage/doacoesStorage';
+import {
+  atualizarDoacao,
+  salvarDoacao,
+} from '../storage/doacoesStorage';
+
 import { RootStackParamList } from '../types/navigation';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Cadastro'>;
+type Props = NativeStackScreenProps<
+  RootStackParamList,
+  'Cadastro'
+>;
 
-export function TelaCadastroDoacao({ navigation }: Props) {
-  const [nome, setNome] = useState('');
-  const [item, setItem] = useState('');
-  const [quantidade, setQuantidade] = useState('');
-  const [observacao, setObservacao] = useState('');
+export function TelaCadastroDoacao({
+  navigation,
+  route,
+}: Props) {
+  const doacaoEmEdicao = route.params?.doacao;
 
-  useEffect(() => {
-    async function recuperarUltimaDoacao() {
-      try {
-        const doacao = await carregarDoacao();
+  const [tipoItem, setTipoItem] = useState(
+    doacaoEmEdicao?.tipoItem ?? ''
+  );
 
-        if (doacao) {
-          setNome(doacao.nome);
-          setItem(doacao.item);
-          setQuantidade(doacao.quantidade);
-          setObservacao(doacao.observacao);
-        }
-      } catch {
-        Alert.alert(
-          'Erro',
-          'Não foi possível recuperar a última doação salva.'
-        );
-      }
-    }
+  const [quantidade, setQuantidade] = useState(
+    doacaoEmEdicao
+      ? String(doacaoEmEdicao.quantidade)
+      : ''
+  );
 
-    recuperarUltimaDoacao();
-  }, []);
+  const [pontoDestino, setPontoDestino] = useState(
+    doacaoEmEdicao?.pontoDestino ?? ''
+  );
 
-  async function criarDoacao() {
-    if (!nome.trim() || !item.trim() || !quantidade.trim()) {
+  async function cadastrarDoacao() {
+    if (
+      !tipoItem.trim() ||
+      !quantidade.trim() ||
+      !pontoDestino.trim()
+    ) {
       Alert.alert(
         'Campos obrigatórios',
-        'Preencha nome, item e quantidade.'
+        'Preencha todos os campos.'
       );
 
       return;
     }
 
-    const dados = {
-      nome: nome.trim(),
-      item: item.trim(),
-      quantidade: quantidade.trim(),
-      observacao: observacao.trim(),
-    };
+    if (
+      !/^\d+$/.test(quantidade.trim()) ||
+      Number(quantidade) <= 0
+    ) {
+      Alert.alert(
+        'Quantidade inválida',
+        'Informe uma quantidade inteira maior que zero.'
+      );
+
+      return;
+    }
 
     try {
-      await salvarDoacao(dados);
+      if (doacaoEmEdicao) {
+        await atualizarDoacao({
+          ...doacaoEmEdicao,
+          tipoItem: tipoItem.trim(),
+          quantidade: Number(quantidade),
+          pontoDestino: pontoDestino.trim(),
+        });
 
-      await registrarDoacao(dados);
+        Alert.alert(
+          'Doação atualizada',
+          'As alterações foram salvas.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+
+        return;
+      }
+
+      await salvarDoacao({
+        tipoItem: tipoItem.trim(),
+        quantidade: Number(quantidade),
+        pontoDestino: pontoDestino.trim(),
+      });
 
       Alert.alert(
-        'Doação criada',
-        'A doação foi registrada neste aparelho.',
+        'Doação registrada',
+        'A doação foi salva neste aparelho.',
         [
           {
             text: 'OK',
@@ -83,7 +114,9 @@ export function TelaCadastroDoacao({ navigation }: Props) {
     } catch {
       Alert.alert(
         'Erro',
-        'Não foi possível salvar os dados da doação.'
+        doacaoEmEdicao
+          ? 'Não foi possível atualizar a doação.'
+          : 'Não foi possível salvar a doação.'
       );
     }
   }
@@ -95,37 +128,31 @@ export function TelaCadastroDoacao({ navigation }: Props) {
     >
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : 'height'
+        }
       >
         <ScrollView
           contentContainerStyle={styles.formulario}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.titulo}>
-            Cadastrar doação
+            {doacaoEmEdicao
+              ? 'Editar doação'
+              : 'Cadastrar doação'}
           </Text>
 
           <Text style={styles.rotulo}>
-            Nome do doador
+            Tipo do item
           </Text>
 
           <TextInput
             style={styles.input}
-            value={nome}
-            onChangeText={setNome}
-            placeholder="Digite o nome"
-            returnKeyType="next"
-          />
-
-          <Text style={styles.rotulo}>
-            Item para doação
-          </Text>
-
-          <TextInput
-            style={styles.input}
-            value={item}
-            onChangeText={setItem}
-            placeholder="Ex.: arroz, roupas, cobertores"
+            value={tipoItem}
+            onChangeText={setTipoItem}
+            placeholder="Ex.: roupas, alimentos"
             returnKeyType="next"
           />
 
@@ -137,41 +164,43 @@ export function TelaCadastroDoacao({ navigation }: Props) {
             style={styles.input}
             value={quantidade}
             onChangeText={setQuantidade}
-            placeholder="Digite a quantidade"
+            placeholder="Ex.: 5"
             keyboardType="numeric"
             returnKeyType="next"
           />
 
           <Text style={styles.rotulo}>
-            Observações
+            Ponto de destino
           </Text>
 
           <TextInput
-            style={[styles.input, styles.inputMultilinha]}
-            value={observacao}
-            onChangeText={setObservacao}
-            placeholder="Informações adicionais"
-            multiline
-            textAlignVertical="top"
+            style={styles.input}
+            value={pontoDestino}
+            onChangeText={setPontoDestino}
+            placeholder="Ex.: Ponto Centro"
           />
 
           <TouchableOpacity
             style={styles.botao}
-            onPress={criarDoacao}
+            onPress={cadastrarDoacao}
           >
             <Text style={styles.textoBotao}>
-              Criar
+              {doacaoEmEdicao
+                ? 'Salvar alterações'
+                : 'Cadastrar'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.botaoDoacoes}
-            onPress={() => navigation.navigate('Doacoes')}
-          >
-            <Text style={styles.textoBotaoDoacoes}>
-              Ver doações cadastradas
-            </Text>
-          </TouchableOpacity>
+          {doacaoEmEdicao ? (
+            <TouchableOpacity
+              style={styles.botaoCancelar}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.textoCancelar}>
+                Cancelar
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -194,7 +223,7 @@ const styles = StyleSheet.create({
   },
 
   titulo: {
-    marginBottom: 16,
+    marginBottom: 20,
     fontSize: 22,
     fontWeight: 'bold',
     color: '#1B3A5C',
@@ -221,14 +250,9 @@ const styles = StyleSheet.create({
     color: '#222222',
   },
 
-  inputMultilinha: {
-    minHeight: 100,
-  },
-
   botao: {
     width: '100%',
     minHeight: 44,
-    marginBottom: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
@@ -243,22 +267,23 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  botaoDoacoes: {
+  botaoCancelar: {
     width: '100%',
     minHeight: 44,
+    marginTop: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#1B3A5C',
+    borderColor: '#777777',
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  textoBotaoDoacoes: {
+  textoCancelar: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1B3A5C',
+    color: '#555555',
   },
 });

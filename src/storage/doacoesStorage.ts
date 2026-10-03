@@ -1,75 +1,70 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { Doacao, NovaDoacao } from '../types/Doacao';
+
 const CHAVE_DOACOES = '@mao_amiga:doacoes';
 
-export type DoacaoRegistrada = {
-  id: string;
-  nome: string;
-  item: string;
-  quantidade: string;
-  observacao: string;
-  data: string;
-};
+export async function listarDoacoes(): Promise<Doacao[]> {
+  const valor = await AsyncStorage.getItem(CHAVE_DOACOES);
 
-type NovaDoacao = {
-  nome: string;
-  item: string;
-  quantidade: string;
-  observacao: string;
-};
-
-export async function carregarDoacoes(): Promise<DoacaoRegistrada[]> {
-  try {
-    const dados = await AsyncStorage.getItem(CHAVE_DOACOES);
-
-    if (!dados) {
-      return [];
-    }
-
-    return JSON.parse(dados);
-  } catch (erro) {
-    console.error('Erro ao carregar doações:', erro);
+  if (!valor) {
     return [];
   }
+
+  return JSON.parse(valor) as Doacao[];
 }
 
-export async function registrarDoacao(
+function gerarId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export async function salvarDoacao(
   doacao: NovaDoacao
-): Promise<DoacaoRegistrada> {
-  const doacoes = await carregarDoacoes();
+): Promise<Doacao> {
+  const doacoes = await listarDoacoes();
 
-  const novaDoacao: DoacaoRegistrada = {
-    id: Date.now().toString(),
-    nome: doacao.nome,
-    item: doacao.item,
-    quantidade: doacao.quantidade,
-    observacao: doacao.observacao,
-    data: new Date().toISOString(),
+  const novaDoacao: Doacao = {
+    ...doacao,
+    id: gerarId(),
+    criadoEm: new Date().toISOString(),
   };
-
-  doacoes.push(novaDoacao);
 
   await AsyncStorage.setItem(
     CHAVE_DOACOES,
-    JSON.stringify(doacoes)
+    JSON.stringify([...doacoes, novaDoacao])
   );
 
   return novaDoacao;
 }
 
-export async function removerDoacao(id: string): Promise<void> {
-  const doacoes = await carregarDoacoes();
+export async function excluirDoacao(
+  id: string
+): Promise<void> {
+  const doacoes = await listarDoacoes();
 
-  const novasDoacoes = doacoes.filter(
+  const atualizadas = doacoes.filter(
     (doacao) => doacao.id !== id
   );
 
   await AsyncStorage.setItem(
     CHAVE_DOACOES,
-    JSON.stringify(novasDoacoes)
+    JSON.stringify(atualizadas)
   );
 }
 
-export async function limparDoacoes(): Promise<void> {
-  await AsyncStorage.removeItem(CHAVE_DOACOES);
+export async function atualizarDoacao(
+  doacaoAtualizada: Doacao
+): Promise<void> {
+  const doacoes = await listarDoacoes();
+
+  const atualizadas = doacoes.map((doacao) =>
+    doacao.id === doacaoAtualizada.id
+      ? doacaoAtualizada
+      : doacao
+  );
+
+  await AsyncStorage.setItem(
+    CHAVE_DOACOES,
+    JSON.stringify(atualizadas)
+  );
 }
