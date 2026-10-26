@@ -20,7 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DoacaoItem } from '../components/DoacaoItem';
-import { listarDoacoes } from '../storage/doacoesStorage';
+import { listarDoacoes } from '../services/doacoesStorage';
 import { Doacao } from '../types/Doacao';
 import { RootStackParamList } from '../types/navigation';
 
