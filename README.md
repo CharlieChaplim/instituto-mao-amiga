@@ -1,40 +1,39 @@
 # Instituto Mão Amiga
 
-Aplicativo individual em React Native com Expo para consulta de pontos de coleta e gerenciamento de doações.
+Aplicativo individual Expo + React Native + TypeScript com API própria de pontos de coleta e distribuição em Spring Boot.
 
 ## Funcionalidades
 
-- consulta de pontos de coleta e distribuição;
-- cadastro de doações;
-- histórico local usando AsyncStorage;
-- detalhe, edição e exclusão de doações;
-- filtro por tipo de item;
-- resumo com totais agrupados por tipo.
+- lista paginada e detalhe de pontos obtidos da API;
+- erro amigável quando a API não responde e estado 404 no detalhe;
+- cadastro de doações com validação e seleção de pontos da API;
+- histórico persistente de doações salvas no aparelho, com edição, exclusão, filtro e totais por tipo.
 
-## Estrutura principal
+## Estrutura
 
-```text
-src/
-├── components/   Componentes reutilizáveis
-├── data/         Dados locais dos pontos
-├── navigation/   Navegação do aplicativo
-├── screens/      Telas
-├── storage/      Persistência das doações
-└── types/        Tipos TypeScript
-```
+- `api/`: API Spring Boot, JPA e H2;
+- `src/types/`: tipos TypeScript de pontos, doações e rotas;
+- `src/services/api.ts`: único acesso ao `fetch`, incluindo a URL da API;
+- `src/services/pontosService.ts`: listagem paginada e consulta de ponto;
+- `src/services/doacoesStorage.ts`: persistência local de doações;
+- `src/screens/`: interface do usuário;
+- `src/navigation/`: rotas tipadas.
 
 ## Executar
 
-```bash
-npm install
-npm start
-```
+Java 21 + Maven, Node.js/npm e ambiente Expo instalados.
+
+1. Em um terminal: `cd api && mvn spring-boot:run`.
+2. Ajuste `API_URL` em `src/services/api.ts` para apontar à máquina que roda a API. Android Emulator: `http://10.0.2.2:8080`; web/iOS simulator: `http://localhost:8080`; celular físico: `http://IP_DO_COMPUTADOR:8080` na mesma rede Wi-Fi.
+3. Na raiz: `npm ci && npm start`.
 
 ## Verificações
 
-```bash
-npm run typecheck
-npm run doctor
-```
+- `npx tsc --noEmit`
+- `cd api && mvn test`
+- `curl "http://localhost:8080/pontos?page=0&size=3&sort=nome,asc"`
+- `curl -i http://localhost:8080/pontos/999999` (404)
 
-O arquivo de entrada usado pelo projeto é `index.js`, conforme definido em `package.json`.
+Os 8 registros iniciais são dados **demonstrativos** com locais de referência em Goiânia. Não indicam que há postos reais de doação nestes lugares. A API é apenas de consulta; as doações permanecem no aparelho na chave antiga do AsyncStorage.
+
+Mais detalhes: `README-SPRINT3.md`. Branch de entrega: `feat/sprint3-issue16-api-pontos`. A atividade usa o nome Issue #16, mas a issue real aberta foi a [#14](https://github.com/CharlieChaplim/instituto-mao-amiga/issues/14).

@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   excluirDoacao,
   listarDoacoes,
-} from '../storage/doacoesStorage';
+} from '../services/doacoesStorage';
 
 import { RootStackParamList } from '../types/navigation';
 

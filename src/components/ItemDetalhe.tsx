@@ -1,46 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Ponto } from '../types/Ponto';
-
-export function ItemDetalhe({ ponto }: { ponto: Ponto }) {
-  return (
-    <View style={styles.detalhe}>
-      <Text style={styles.nome}>{ponto.nome}</Text>
-
-      <Text style={styles.rotulo}>Endereço</Text>
-      <Text style={styles.texto}>{ponto.endereco}</Text>
-
-      <Text style={styles.rotulo}>Dias e horários</Text>
-      <Text style={styles.texto}>{ponto.horario}</Text>
-
-      <Text style={styles.rotulo}>O que recebe ou distribui</Text>
-      <Text style={styles.texto}>{ponto.atendimento}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  detalhe: {
-    width: '100%',
-    padding: 16,
-    backgroundColor: '#F3F5F7',
-    borderRadius: 8,
-  },
-  nome: {
-    marginBottom: 14,
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1B3A5C',
-  },
-  rotulo: {
-    marginTop: 10,
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-  },
-  texto: {
-    marginTop: 3,
-    fontSize: 15,
-    lineHeight: 21,
-    color: '#333333',
-  },
-});
+import type { Ponto } from '../types/ponto';
+export function ItemDetalhe({ponto}:{ponto:Ponto}) {return <View style={styles.box}><Text style={styles.nome}>{ponto.nome}</Text><Text style={styles.rotulo}>Endereço</Text><Text>{ponto.endereco}</Text><Text style={styles.rotulo}>Dias e horários</Text><Text>{ponto.horario}</Text><Text style={styles.rotulo}>Recebe ou distribui</Text><Text>{ponto.atendimento}</Text></View>;}
+const styles=StyleSheet.create({box:{padding:16,backgroundColor:'#F3F5F7',borderRadius:8},nome:{fontWeight:'bold',fontSize:20,color:'#1B3A5C'},rotulo:{fontWeight:'bold',marginTop:14,color:'#2E7D32'}});
