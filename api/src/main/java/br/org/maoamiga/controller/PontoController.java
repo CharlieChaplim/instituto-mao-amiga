@@ -4,6 +4,9 @@ import br.org.maoamiga.dto.PontoRequestDTO;
 import br.org.maoamiga.dto.PontoResponseDTO;
 import br.org.maoamiga.service.PontoService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -20,6 +23,13 @@ public class PontoController {
 
     @GetMapping
     public List<PontoResponseDTO> listar() { return service.listar(); }
+
+    @GetMapping("/filtro")
+    public Page<PontoResponseDTO> filtrar(
+            @RequestParam(defaultValue = "") String filtro,
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        return service.filtrar(filtro, pageable);
+    }
 
     @GetMapping("/{id}")
     public PontoResponseDTO buscar(@PathVariable UUID id) { return service.buscar(id); }
