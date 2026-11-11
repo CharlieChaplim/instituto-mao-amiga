@@ -145,3 +145,159 @@ Java 21 + Maven, Node.js/npm e ambiente Expo instalados.
 Os 8 registros iniciais são dados **demonstrativos** com locais de referência em Goiânia. Não indicam que há postos reais de doação nestes lugares. A API é apenas de consulta; as doações permanecem no aparelho na chave antiga do AsyncStorage.
 
 A integração anterior foi entregue na issue #14. A N2-1 corresponde à issue #16.
+
+
+# N2-2 — Busca de pontos com paginação (issue #17)
+
+Esta seção atualiza a referência N2-1 acima. `GET /api/v1/pontos` continua
+retornando a lista completa; o endpoint novo de busca é
+`GET /api/v1/pontos/filtro?filtro=...&page=0&size=10`.
+
+- Busca com `@Query` pelo nome **ou** bairro, sem diferenciar maiúsculas.
+- Filtro ausente, vazio ou só com espaços retorna todos os pontos paginados.
+- `@PageableDefault`: 10 itens, primeira página `0`, ordem por nome crescente.
+- `sort=bairro,asc` troca a ordenação; `page=1` pede a segunda página.
+- Retorno `Page<PontoResponseDTO>` serializado como `content` + `page`.
+- A propriedade `spring.data.web.pageable.serialization-mode=via_dto` é mantida;
+  `PaginacaoConfig` também habilita explicitamente `VIA_DTO`.
+- 25 pontos de demonstração: oito anteriores e 17 novos, com bairros de Goiânia.
+  Endereços dos pontos adicionais são fictícios, identificados como demonstrativos.
+- Carga versionada em `cargas_iniciais`: atualiza o banco da N2-1 sem apagar os
+  registros existentes. Nomes originais já presentes são preservados com seus IDs.
+  A carga roda uma vez; reiniciar não duplica nem recria pontos apagados depois dela.
+  Se um ponto original foi renomeado antes da atualização, o ponto demonstrativo
+  com o nome original poderá ser inserido, preservando o registro renomeado.
+- O app ainda será integrado na N2-3 (#18). Esta etapa altera apenas a API.
+
+## Três chamadas e respostas verificadas
+
+Respostas reais capturadas por MockMvc nos testes de integração com H2 isolado
+em memória e a carga inicial de 25 pontos. Usamos `size=1` para mostrar cada
+corpo completo; os UUIDs serão diferentes no banco local. Sem `size`, o padrão
+continua sendo **10**. Esses registros não são prints do Swagger.
+
+### Sem filtro
+
+GET `http://localhost:8080/api/v1/pontos/filtro?size=1`
+
+Resposta verificada: HTTP 200.
+
+```json
+{
+  "content": [
+    {
+      "id": "9501a4f5-4a89-4227-9843-fda6549d5255",
+      "nome": "Campinas (demonstração)",
+      "endereco": "Av. 24 de Outubro, Goiânia - GO",
+      "bairro": "Campinas",
+      "horario": "Seg a Sex, 8h às 17h",
+      "tipo": "distribuição"
+    }
+  ],
+  "page": {
+    "size": 1,
+    "number": 0,
+    "totalElements": 25,
+    "totalPages": 25
+  }
+}
+```
+
+### Filtrando por bairro
+
+GET `http://localhost:8080/api/v1/pontos/filtro?filtro=Setor%20Central&size=1`
+
+Resposta verificada: HTTP 200.
+
+```json
+{
+  "content": [
+    {
+      "id": "162d623a-e04f-4b13-850e-30b95022a026",
+      "nome": "Mercado Central (demonstração)",
+      "endereco": "Rua 3, Goiânia - GO",
+      "bairro": "Setor Central",
+      "horario": "Seg a Sex, 8h às 17h",
+      "tipo": "coleta"
+    }
+  ],
+  "page": {
+    "size": 1,
+    "number": 0,
+    "totalElements": 2,
+    "totalPages": 2
+  }
+}
+```
+
+### Segunda página
+
+GET `http://localhost:8080/api/v1/pontos/filtro?page=1&size=1`
+
+Resposta verificada: HTTP 200.
+
+```json
+{
+  "content": [
+    {
+      "id": "162d623a-e04f-4b13-850e-30b95022a026",
+      "nome": "Mercado Central (demonstração)",
+      "endereco": "Rua 3, Goiânia - GO",
+      "bairro": "Setor Central",
+      "horario": "Seg a Sex, 8h às 17h",
+      "tipo": "coleta"
+    }
+  ],
+  "page": {
+    "size": 1,
+    "number": 1,
+    "totalElements": 25,
+    "totalPages": 25
+  }
+}
+```
+
+## Validação da N2-2
+
+Na pasta `api/`, com Java 21:
+
+```powershell
+.\mvnw.cmd clean test
+.\mvnw.cmd spring-boot:run
+```
+
+No Linux/macOS: `bash mvnw clean test` e `bash mvnw spring-boot:run`.
+
+1. Abra `http://localhost:8080/api/v1/pontos/filtro`: confira `page.size=10` e,
+   com a carga original, `totalElements=25`, `totalPages=3` e `number=0`.
+2. Compare `?filtro=mercado` com `?filtro=MERCADO`: mesmos resultados.
+3. Execute as três chamadas documentadas acima e registre as respostas reais.
+4. Confira `?sort=bairro,asc`, `?page=1` e `?page=2` (última página com cinco itens
+   se o banco contiver somente os 25 pontos iniciais).
+5. Reinicie a API: a quantidade não deve crescer. Não apague `api/data/`.
+6. Teste novamente o CRUD da N2-1.
+
+`PontoFiltroTest` cobre paginação, ordenação, filtros, resposta vazia, atualização
+da carga de oito para 25 registros, preservação de IDs e reinício sem recriação
+após exclusão. `PontoControllerTest` continua cobrindo o CRUD da N2-1.
+
+Para gravar as três respostas reais em `docs/n2-2/`, execute **na raiz**:
+
+```powershell
+New-Item -ItemType Directory -Force docs/n2-2 | Out-Null
+curl.exe --fail "http://localhost:8080/api/v1/pontos/filtro?size=1" -o docs/n2-2/sem-filtro.json
+curl.exe --fail "http://localhost:8080/api/v1/pontos/filtro?filtro=Setor%20Central&size=1" -o docs/n2-2/por-bairro.json
+curl.exe --fail "http://localhost:8080/api/v1/pontos/filtro?page=1&size=1" -o docs/n2-2/segunda-pagina.json
+```
+
+Depois da captura: [sem filtro](docs/n2-2/sem-filtro.json),
+[por bairro](docs/n2-2/por-bairro.json) e [segunda página](docs/n2-2/segunda-pagina.json).
+Os arquivos incluídos foram gerados pelos testes de integração; os comandos acima
+permitem substituí-los pelas respostas da sua execução local.
+
+## Resultado da validação desta entrega
+
+10 testes passaram (5 de CRUD e 5 da N2-2), sem falhas, erros ou testes ignorados,
+com JDK 21.0.13. Relatório: [VALIDACAO.md](docs/n2-2/VALIDACAO.md).
+A nota anterior sobre testes não executados descreve a entrega original da N2-1;
+a suíte de CRUD foi executada com sucesso nesta entrega.

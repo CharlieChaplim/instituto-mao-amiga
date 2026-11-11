@@ -5,6 +5,8 @@ import br.org.maoamiga.dto.PontoResponseDTO;
 import br.org.maoamiga.entity.Ponto;
 import br.org.maoamiga.repository.PontoRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,6 +22,11 @@ public class PontoService {
 
     public List<PontoResponseDTO> listar() {
         return repository.findAll().stream().map(PontoResponseDTO::de).toList();
+    }
+
+    public Page<PontoResponseDTO> filtrar(String filtro, Pageable pageable) {
+        return repository.filtrar(filtro == null ? "" : filtro.trim(), pageable)
+                .map(PontoResponseDTO::de);
     }
 
     public PontoResponseDTO buscar(UUID id) { return PontoResponseDTO.de(encontrar(id)); }

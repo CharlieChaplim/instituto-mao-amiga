@@ -1,0 +1,16 @@
+{
+  "content" : [ {
+    "id" : "162d623a-e04f-4b13-850e-30b95022a026",
+    "nome" : "Mercado Central (demonstração)",
+    "endereco" : "Rua 3, Goiânia - GO",
+    "bairro" : "Setor Central",
+    "horario" : "Seg a Sex, 8h às 17h",
+    "tipo" : "coleta"
+  } ],
+  "page" : {
+    "size" : 1,
+    "number" : 0,
+    "totalElements" : 2,
+    "totalPages" : 2
+  }
+}

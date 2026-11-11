@@ -1,0 +1,16 @@
+{
+  "content" : [ {
+    "id" : "9501a4f5-4a89-4227-9843-fda6549d5255",
+    "nome" : "Campinas (demonstração)",
+    "endereco" : "Av. 24 de Outubro, Goiânia - GO",
+    "bairro" : "Campinas",
+    "horario" : "Seg a Sex, 8h às 17h",
+    "tipo" : "distribuição"
+  } ],
+  "page" : {
+    "size" : 1,
+    "number" : 0,
+    "totalElements" : 25,
+    "totalPages" : 25
+  }
+}
