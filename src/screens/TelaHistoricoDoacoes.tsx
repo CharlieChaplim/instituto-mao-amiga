@@ -8,7 +8,6 @@ import {
 } from 'react';
 
 import {
-  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -17,6 +16,7 @@ import {
   View,
 } from 'react-native';
 
+import { useAvisos } from '../contexts/AvisosContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DoacaoItem } from '../components/DoacaoItem';
@@ -32,6 +32,7 @@ type Props = NativeStackScreenProps<
 export function TelaHistoricoDoacoes({
   navigation,
 }: Props) {
+  const { avisar } = useAvisos();
   const [doacoes, setDoacoes] = useState<Doacao[]>([]);
   const [busca, setBusca] = useState('');
 
@@ -96,7 +97,7 @@ export function TelaHistoricoDoacoes({
 
       setDoacoes([...dados].reverse());
     } catch {
-      Alert.alert(
+      void avisar(
         'Erro',
         'Não foi possível carregar as doações.'
       );

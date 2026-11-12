@@ -1,15 +1,15 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import {
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+import { useAvisos } from '../contexts/AvisosContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -28,6 +28,9 @@ export function TelaDetalheDoacao({
   route,
   navigation,
 }: Props) {
+  const { avisar, confirmar } = useAvisos();
+  const trava = useRef(false);
+  const [excluindo, setExcluindo] = useState(false);
   const doacaoInicial = route.params.doacao;
 
   const [doacao, setDoacao] = useState(doacaoInicial);
@@ -46,37 +49,21 @@ export function TelaDetalheDoacao({
         }
       }
 
-      atualizarDetalhe();
-    }, [doacaoInicial.id])
+      void atualizarDetalhe().catch(() => { void avisar('Erro', 'Não foi possível carregar a doação.'); });
+    }, [doacaoInicial.id, avisar])
   );
 
-  function confirmarExclusao() {
-    Alert.alert(
-      'Excluir doação',
-      'Tem certeza que deseja excluir esta doação?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await excluirDoacao(doacao.id);
-
-              navigation.goBack();
-            } catch {
-              Alert.alert(
-                'Erro',
-                'Não foi possível excluir a doação.'
-              );
-            }
-          },
-        },
-      ]
-    );
+  async function confirmarExclusao() {
+    if (trava.current) return;
+    trava.current = true; setExcluindo(true);
+    try {
+      if (!await confirmar('Excluir doação', `Deseja excluir a doação de “${doacao.tipoItem}”?`)) return;
+      await excluirDoacao(doacao.id);
+      await avisar('Sucesso', `Doação de “${doacao.tipoItem}” excluída.`);
+      navigation.goBack();
+    } catch {
+      await avisar('Erro', 'Não foi possível excluir a doação. Tente novamente.');
+    } finally { trava.current = false; setExcluindo(false); }
   }
 
   return (
@@ -107,6 +94,8 @@ export function TelaDetalheDoacao({
         </Text>
 
         <TouchableOpacity
+          accessibilityRole="button"
+          disabled={excluindo}
           style={styles.botaoEditar}
           onPress={() =>
             navigation.navigate('Cadastro', {
@@ -120,11 +109,13 @@ export function TelaDetalheDoacao({
         </TouchableOpacity>
 
         <TouchableOpacity
+          accessibilityRole="button"
+          disabled={excluindo}
           style={styles.botaoExcluir}
-          onPress={confirmarExclusao}
+          onPress={() => { void confirmarExclusao(); }}
         >
           <Text style={styles.textoExcluir}>
-            Excluir doação
+            {excluindo ? 'Aguarde...' : 'Excluir doação'}
           </Text>
         </TouchableOpacity>
       </View>

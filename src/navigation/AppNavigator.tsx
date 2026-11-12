@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { TelaCadastroPonto } from '../screens/TelaCadastroPonto';
 import { TelaCadastroDoacao } from '../screens/TelaCadastroDoacao';
 import { TelaDetalheDoacao } from '../screens/TelaDetalheDoacao';
 import { TelaDetalhePonto } from '../screens/TelaDetalhePonto';
@@ -31,6 +32,9 @@ export function AppNavigator() {
             title: 'Detalhe do ponto',
           }}
         />
+
+        <Stack.Screen name="CadastroPonto" component={TelaCadastroPonto}
+          options={({ route }) => ({ title: route.params?.pontoId ? 'Editar ponto' : 'Cadastrar ponto' })} />
 
         <Stack.Screen
           name="Cadastro"

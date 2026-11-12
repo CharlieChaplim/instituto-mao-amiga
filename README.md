@@ -313,3 +313,18 @@ As doações continuam locais nesta etapa.
 
 Veja [execução, configuração de IP e testes da N2-3](docs/n2-3/README.md) e
 [resultado da validação](docs/n2-3/VALIDACAO.md).
+
+
+# N2-4 — CRUD de pontos e avisos corrigidos (#19)
+
+O app permite cadastrar, editar e excluir pontos pela API. Cadastro e edição
+reutilizam o mesmo formulário, e exclusões pedem confirmação.
+Os avisos de sucesso, validação e exclusão de doações agora funcionam na web por
+meio de diálogos da aplicação; Android/iOS continuam usando Alert.alert.
+Doações permanecem no AsyncStorage nesta etapa.
+
+Execute `npm ci`, `npm run typecheck` e `npm test`. Com a API ligada,
+execute `npx expo start --web --clear` na raiz.
+
+Veja [funcionalidades e roteiro de aceite](docs/n2-4/README.md) e
+[validação: 17 testes passaram](docs/n2-4/VALIDACAO.md).
