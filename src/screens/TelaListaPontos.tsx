@@ -29,6 +29,9 @@ export function TelaListaPontos({ navigation }: Props) {
         onPress={() => navigation.navigate('Detalhe', { pontoId: item.id })} />}
       ListHeaderComponent={<View>
         <Text style={styles.titulo}>Pontos de coleta e distribuição</Text>
+        <TouchableOpacity accessibilityRole="button" style={styles.botao} onPress={() => navigation.navigate('CadastroPonto')}>
+          <Text style={styles.botaoTexto}>Cadastrar ponto</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Cadastro')}>
           <Text style={styles.botaoTexto}>Criar doação</Text>
         </TouchableOpacity>

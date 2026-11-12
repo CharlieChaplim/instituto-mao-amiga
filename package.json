@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "doctor": "npx --yes expo-doctor",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/n2-3.test.cjs tests/n2-4-ui.test.cjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -25,7 +26,9 @@
   },
   "private": true,
   "devDependencies": {
+    "@testing-library/react": "^16.3.3",
     "@types/react": "~19.2.4",
+    "jsdom": "^26.1.0",
     "typescript": "~6.0.3"
   }
 }
