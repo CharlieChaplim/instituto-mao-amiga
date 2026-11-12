@@ -1,12 +1,12 @@
 export type Ponto = {
-  id: number;
+  id: string;
   nome: string;
   endereco: string;
+  bairro: string;
   horario: string;
-  atendimento: string;
-  latitude: number;
-  longitude: number;
+  tipo: 'coleta' | 'distribuição';
 };
+export type PontoRequest = Omit<Ponto, 'id'>;
 export type PaginaPontos = {
   content: Ponto[];
   page: { size: number; number: number; totalElements: number; totalPages: number };

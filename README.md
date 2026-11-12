@@ -301,3 +301,15 @@ permitem substituí-los pelas respostas da sua execução local.
 com JDK 21.0.13. Relatório: [VALIDACAO.md](docs/n2-2/VALIDACAO.md).
 A nota anterior sobre testes não executados descreve a entrega original da N2-1;
 a suíte de CRUD foi executada com sucesso nesta entrega.
+
+
+# N2-3 — App integrado à API (#18)
+
+A lista e o detalhe do app já usam `/api/v1/pontos`, UUID e o novo modelo.
+Esta seção substitui os avisos anteriores de incompatibilidade do app.
+Busca por nome/bairro e rolagem infinita usam `/api/v1/pontos/filtro`.
+A URL é configurada apenas em `src/services/api.ts`, incluindo `/api/v1`.
+As doações continuam locais nesta etapa.
+
+Veja [execução, configuração de IP e testes da N2-3](docs/n2-3/README.md) e
+[resultado da validação](docs/n2-3/VALIDACAO.md).
