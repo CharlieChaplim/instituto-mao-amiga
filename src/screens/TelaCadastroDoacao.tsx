@@ -4,7 +4,7 @@ import { Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, S
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { atualizarDoacao, salvarDoacao } from '../services/doacoesStorage';
 import { listarPontos } from '../services/pontosService';
-import type { Ponto } from '../types/ponto';
+import type { Ponto } from '../types/Ponto';
 import type { RootStackParamList } from '../types/navigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'Cadastro'>;
 export function TelaCadastroDoacao({ navigation, route }: Props) {
@@ -19,15 +19,7 @@ export function TelaCadastroDoacao({ navigation, route }: Props) {
     let ativo = true;
     async function carregar() {
       try {
-        const dados: Ponto[] = [];
-        let pagina = 0;
-        let total = 1;
-        do {
-          const resposta = await listarPontos(pagina, 50);
-          dados.push(...resposta.content);
-          total = resposta.page.totalPages;
-          pagina += 1;
-        } while (pagina < total);
+        const dados = await listarPontos();
         if (ativo) setPontos(dados);
       } catch {
         if (ativo) setErro('Não foi possível carregar os destinos. Ligue a API e reabra esta tela.');

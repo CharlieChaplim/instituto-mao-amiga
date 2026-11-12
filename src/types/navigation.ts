@@ -1,7 +1,7 @@
 import type { Doacao } from './Doacao';
 export type RootStackParamList = {
   Lista: undefined;
-  Detalhe: { pontoId: number };
+  Detalhe: { pontoId: string };
   Cadastro: { doacao?: Doacao } | undefined;
   Historico: undefined;
   DetalheDoacao: { doacao: Doacao };
