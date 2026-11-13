@@ -1,0 +1,99 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/v1/doacoes",
+    "status": 201,
+    "body": {
+      "id": "24e35746-7898-42e4-9352-6ed325b7c803",
+      "tipoItem": "Teste N2-5",
+      "quantidade": 3,
+      "pontoDestino": "Mercado Central",
+      "criadoEm": "2026-11-13T12:32:04.742157"
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/doacoes",
+    "status": 400,
+    "body": {
+      "timestamp": "2026-11-13T15:32:04.771+00:00",
+      "status": 400,
+      "error": "Bad Request",
+      "path": "/api/v1/doacoes"
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/doacoes/filtro?filtro=teste",
+    "status": 200,
+    "body": {
+      "content": [
+        {
+          "id": "24e35746-7898-42e4-9352-6ed325b7c803",
+          "tipoItem": "Teste N2-5",
+          "quantidade": 3,
+          "pontoDestino": "Mercado Central",
+          "criadoEm": "2026-11-13T12:32:04.742157"
+        }
+      ],
+      "page": {
+        "size": 10,
+        "number": 0,
+        "totalElements": 1,
+        "totalPages": 1
+      }
+    }
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/doacoes/24e35746-7898-42e4-9352-6ed325b7c803",
+    "status": 200,
+    "body": {
+      "id": "24e35746-7898-42e4-9352-6ed325b7c803",
+      "tipoItem": "Teste N2-5",
+      "quantidade": 7,
+      "pontoDestino": "Mercado Central",
+      "criadoEm": "2026-11-13T12:32:04.742157"
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/doacoes/24e35746-7898-42e4-9352-6ed325b7c803",
+    "status": 200,
+    "body": {
+      "id": "24e35746-7898-42e4-9352-6ed325b7c803",
+      "tipoItem": "Teste N2-5",
+      "quantidade": 7,
+      "pontoDestino": "Mercado Central",
+      "criadoEm": "2026-11-13T12:32:04.742157"
+    }
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/doacoes/24e35746-7898-42e4-9352-6ed325b7c803",
+    "status": 204,
+    "body": null
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/doacoes/24e35746-7898-42e4-9352-6ed325b7c803",
+    "status": 404,
+    "body": {
+      "timestamp": "2026-11-13T15:32:09.136+00:00",
+      "status": 404,
+      "error": "Not Found",
+      "path": "/api/v1/doacoes/24e35746-7898-42e4-9352-6ed325b7c803"
+    }
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/doacoes/24e35746-7898-42e4-9352-6ed325b7c803",
+    "status": 404,
+    "body": {
+      "timestamp": "2026-11-13T15:32:09.195+00:00",
+      "status": 404,
+      "error": "Not Found",
+      "path": "/api/v1/doacoes/24e35746-7898-42e4-9352-6ed325b7c803"
+    }
+  }
+]
