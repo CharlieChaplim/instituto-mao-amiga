@@ -89,15 +89,21 @@ Salve os prints em `docs/n2-1/` e insira-os abaixo antes de concluir a issue.
 Cada print deve mostrar endpoint, código HTTP e corpo quando houver. Para 204,
 a ausência de corpo é esperada. Não há imagens simuladas nesta entrega.
 
-## Evidências do Swagger (pendentes de captura local)
-
-- GET lista — 200.
-- GET por ID — 200.
+## Evidências do Swagger 
 - POST — 201.
+![POST](docs/n2-5/post-doacao.png)
+- GET lista — 200.
+![GET lista](docs/n2-5/listar-doacoes.png)
+- GET por ID — 200.
+![GET por ID](docs/n2-5/buscar-doacao.png)
 - PUT — 200.
+![PUT](docs/n2-5/editar-doacao.png)
 - DELETE — 204.
-- POST/PUT inválidos — 400.
-- GET/PUT inexistentes — 404.
+![DELETE](docs/n2-5/excluir-doacao.png)
+- POST inválido — 400.
+![POST inválidoa](docs/n2-5/validacao.png)
+- GET inexistente — 404.
+![Doação cadastrada](docs/n2-5/nao-encontrada.png)
 
 ---
 
