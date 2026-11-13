@@ -89,15 +89,21 @@ Salve os prints em `docs/n2-1/` e insira-os abaixo antes de concluir a issue.
 Cada print deve mostrar endpoint, código HTTP e corpo quando houver. Para 204,
 a ausência de corpo é esperada. Não há imagens simuladas nesta entrega.
 
-## Evidências do Swagger (pendentes de captura local)
-
-- GET lista — 200.
-- GET por ID — 200.
+## Evidências do Swagger 
 - POST — 201.
+![POST](docs/n2-5/post-doacao.png)
+- GET lista — 200.
+![GET lista](docs/n2-5/listar-doacoes.png)
+- GET por ID — 200.
+![GET por ID](docs/n2-5/buscar-doacao.png)
 - PUT — 200.
+![PUT](docs/n2-5/editar-doacao.png)
 - DELETE — 204.
-- POST/PUT inválidos — 400.
-- GET/PUT inexistentes — 404.
+![DELETE](docs/n2-5/excluir-doacao.png)
+- POST inválido — 400.
+![POST inválidoa](docs/n2-5/validacao.png)
+- GET inexistente — 404.
+![Doação cadastrada](docs/n2-5/nao-encontrada.png)
 
 ---
 
@@ -328,3 +334,15 @@ execute `npx expo start --web --clear` na raiz.
 
 Veja [funcionalidades e roteiro de aceite](docs/n2-4/README.md) e
 [validação: 17 testes passaram](docs/n2-4/VALIDACAO.md).
+
+
+# N2-5 — CRUD de doações na API (#20)
+
+A API agora possui cadastro, detalhe, edição, exclusão e busca paginada de
+doações em `/api/v1/doacoes`. Valida quantidade positiva e campos obrigatórios,
+gera UUID/data no servidor e preserva ambos na edição. A integração do app
+permanece para N2-6 e N2-7.
+
+Veja [endpoints, exemplos e roteiro de prints do Swagger](docs/n2-5/README.md).
+Os prints exigidos ainda precisam ser capturados localmente antes do merge que
+fecha a issue. Resultado dos testes: [VALIDACAO.md](docs/n2-5/VALIDACAO.md).
