@@ -1,3 +1,9 @@
+# Instituto Mão Amiga — estado atual N2-6
+
+Cadastro e histórico de doações agora usam a API. Consulte [N2-6](docs/n2-6/README.md).
+Os capítulos abaixo registram etapas anteriores; as notas de armazenamento local
+descrevem o comportamento anterior à N2-6.
+
 # N2-1 — CRUD de pontos na API (issue #16)
 
 Esta branch implementa apenas a primeira etapa da N2. A API fica em `api/`.
@@ -89,21 +95,35 @@ Salve os prints em `docs/n2-1/` e insira-os abaixo antes de concluir a issue.
 Cada print deve mostrar endpoint, código HTTP e corpo quando houver. Para 204,
 a ausência de corpo é esperada. Não há imagens simuladas nesta entrega.
 
-## Evidências do Swagger 
-- POST — 201.
-![POST](docs/n2-5/post-doacao.png)
-- GET lista — 200.
-![GET lista](docs/n2-5/listar-doacoes.png)
-- GET por ID — 200.
-![GET por ID](docs/n2-5/buscar-doacao.png)
-- PUT — 200.
-![PUT](docs/n2-5/editar-doacao.png)
-- DELETE — 204.
-![DELETE](docs/n2-5/excluir-doacao.png)
-- POST inválido — 400.
-![POST inválidoa](docs/n2-5/validacao.png)
-- GET inexistente — 404.
-![Doação cadastrada](docs/n2-5/nao-encontrada.png)
+## Evidências do Swagger — N2-1: CRUD de pontos
+
+### GET — Listagem de pontos (200)
+
+![Listagem de pontos](docs/n2-1/listar-pontos.png)
+
+### POST — Cadastro de ponto (201)
+
+![Cadastro de ponto](docs/n2-1/criar-ponto.png)
+
+### GET — Consulta por UUID (200)
+
+![Consulta de ponto por UUID](docs/n2-1/buscar-ponto.png)
+
+### PUT — Atualização de ponto (200)
+
+![Atualização de ponto](docs/n2-1/editar-ponto.png)
+
+### DELETE — Exclusão de ponto (204)
+
+![Exclusão de ponto](docs/n2-1/excluir-ponto.png)
+
+### POST — Dados inválidos (400)
+
+![Validação dos dados do ponto](docs/n2-1/post-invalido.png)
+
+### GET — Ponto não encontrado (404)
+
+![Ponto não encontrado](docs/n2-1/nao-encontrado.png)
 
 ---
 
@@ -344,5 +364,68 @@ gera UUID/data no servidor e preserva ambos na edição. A integração do app
 permanece para N2-6 e N2-7.
 
 Veja [endpoints, exemplos e roteiro de prints do Swagger](docs/n2-5/README.md).
-Os prints exigidos ainda precisam ser capturados localmente antes do merge que
-fecha a issue. Resultado dos testes: [VALIDACAO.md](docs/n2-5/VALIDACAO.md).
+As capturas recebidas estão abaixo; a listagem 200 ainda precisa ser refeita.
+Resultado dos testes: [VALIDACAO.md](docs/n2-5/VALIDACAO.md).
+
+
+## Evidências do Swagger — N2-5 (doações)
+
+Capturas reais fornecidas pelo autor. Confira o **Server response**: a seção
+“Example Value” do Swagger é apenas exemplo e não comprova a resposta obtida.
+
+### POST válido — 201
+
+![Doação criada, POST 201](docs/n2-5/post-doacao.png)
+
+### GET por UUID — 200
+
+![Consulta da doação, GET 200](docs/n2-5/buscar-doacao.png)
+
+### PUT — 200, quantidade 5
+
+![Atualização da doação, PUT 200](docs/n2-5/editar-doacao.png)
+
+### DELETE — 204, sem corpo
+
+![Exclusão da doação, DELETE 204](docs/n2-5/excluir-doacao.png)
+
+### POST inválido — 400
+
+![Validação da doação, POST 400](docs/n2-5/validacao.png)
+
+### GET de UUID excluído — 404
+
+![Doação não encontrada, GET 404](docs/n2-5/nao-encontrada.png)
+
+### GET paginado — captura atual com erro 500 (pendente corrigir)
+
+![Listagem com resposta 500, não comprova sucesso](docs/n2-5/listar-doacoes.png)
+
+A URL da captura contém `sort=["criadoEm,desc"]` codificado. Refaça a chamada
+com `sort=criadoEm,desc` (sem colchetes nem aspas), ou omita `sort` para usar
+a ordem padrão. URL para conferir:
+`http://localhost:8080/api/v1/doacoes/filtro?page=0&size=10&sort=criadoEm,desc`.
+No Swagger, preencha o item do campo `sort` com `criadoEm,desc`.
+Substitua `docs/n2-5/listar-doacoes.png` quando o **Server response** mostrar
+200 e o corpo real contiver `content` e `page`; então atualize esta legenda.
+Os prints recebidos também não documentam PUT inválido (400) nem PUT após
+exclusão (404); esses casos continuam no roteiro de conferência local.
+
+# N2-6 — Cadastro e histórico de doações pela API (#21)
+
+O cadastro envia POST após validação; erro preserva os campos e sucesso mostra
+aviso antes de voltar. Os destinos vêm de GET `/api/v1/pontos`, e seu nome é
+salvo na doação. O histórico usa FlatList, UUID como chave, páginas de 10 itens,
+filtro por tipo na API e ordem de criação decrescente. Ao receber foco, busca
+novamente a primeira página; uma doação nova aparece no topo se corresponder
+ao filtro ativo. Há estados separados de carregamento, erro com nova tentativa
+e lista vazia. O detalhe consulta a doação pelo UUID.
+
+Nenhuma tela usa o armazenamento local de doações. Dados antigos permanecem
+no aparelho, sem migração automática; o histórico agora mostra os dados da API.
+Edição/exclusão no app ficam para N2-7 (#22), conforme o escopo da issue #21.
+O serviço já oferece os métodos PUT e DELETE necessários à próxima etapa.
+
+Veja [execução e aceite N2-6](docs/n2-6/README.md).
+As seções N2-1 a N2-5 acima registram as etapas anteriores; esta seção descreve
+o comportamento atual das doações no app.

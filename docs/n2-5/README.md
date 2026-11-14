@@ -59,10 +59,14 @@ GET, PUT e DELETE com UUID inexistente respondem 404. UUID malformado e dados
 inválidos respondem 400. Requisições inválidas não criam nem alteram registros.
 CORS está liberado como nos endpoints de pontos.
 
-## Prints do Swagger — captura local pendente
+## Prints do Swagger — capturas recebidas
 
-As imagens abaixo devem ser capturadas de uma execução real, incluindo URL,
-código HTTP e corpo da resposta (quando existir). Não há prints simulados.
+As capturas recebidas estão no [README principal](../../README.md#evidências-do-swagger--n2-5-doações).
+A imagem de listagem mostra **500**, portanto ainda falta a captura 200 com
+`content` e `page`. Use `sort=criadoEm,desc`, sem colchetes nem aspas, ou omita
+esse parâmetro. Prints de doações não comprovam endpoints de pontos da N2-1.
+
+Roteiro para conferir e completar as evidências:
 
 1. POST válido: capture 201 e copie o UUID retornado.
 2. GET `/filtro`: capture 200, `content` e `page`.
@@ -73,9 +77,7 @@ código HTTP e corpo da resposta (quando existir). Não há prints simulados.
 7. DELETE do UUID criado: capture 204.
 8. GET e PUT desse UUID excluído: capture 404 (PUT deve usar corpo válido).
 
-Depois de salvar as imagens em `docs/n2-5/`, insira os links Markdown no README.
-A integração do commit à main fechará a issue por `Closes #20`; faça isso apenas
-após completar os critérios, inclusive esses prints e a conferência local.
+As imagens ficam em `docs/n2-5/`, com links no README principal.
 
 ## Testes
 

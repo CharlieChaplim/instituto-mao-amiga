@@ -39,11 +39,7 @@ export function AppNavigator() {
         <Stack.Screen
           name="Cadastro"
           component={TelaCadastroDoacao}
-          options={({ route }) => ({
-            title: route.params?.doacao
-              ? 'Editar doação'
-              : 'Cadastro de doação',
-          })}
+          options={{ title: 'Cadastro de doação' }}
         />
 
         <Stack.Screen

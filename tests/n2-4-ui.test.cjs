@@ -22,6 +22,7 @@ const {render,screen,fireEvent,waitFor,cleanup,act}=require('@testing-library/re
 const {AvisosProvider,useAvisos}=require('../src/contexts/AvisosContext.tsx');
 const {TelaCadastroDoacao}=require('../src/screens/TelaCadastroDoacao.tsx');
 const {TelaDetalheDoacao}=require('../src/screens/TelaDetalheDoacao.tsx');
+const {TelaHistoricoDoacoes}=require('../src/screens/TelaHistoricoDoacoes.tsx');
 const {TelaCadastroPonto}=require('../src/screens/TelaCadastroPonto.tsx');
 const {TelaDetalhePonto}=require('../src/screens/TelaDetalhePonto.tsx');
 const storage=require('../src/services/doacoesStorage.ts');
@@ -44,37 +45,23 @@ async function preencherPonto(){
 }
 
 test('doação criada mostra aviso com item, salva uma vez e volta somente após OK',async()=>{
- mockApi();const nav=mount(TelaCadastroDoacao);
+ const calls=mockApi();const nav=mount(TelaCadastroDoacao);
  fireEvent.change(screen.getByPlaceholderText('Ex.: roupas, alimentos'),{target:{value:'Roupas'}});
  fireEvent.change(screen.getByPlaceholderText('Ex.: 5'),{target:{value:'3'}});
  fireEvent.click(await screen.findByText('○ Ponto A'));
  fireEvent.click(screen.getByRole('button',{name:'Cadastrar'}));
  await screen.findByText('Doação de 3 unidade(s) de “Roupas” criada com sucesso.');
- assert.equal((await storage.listarDoacoes()).length,1);assert.equal(nav.voltas,0);
+ assert.equal((await storage.listarDoacoes()).length,0);assert.equal(nav.voltas,0);
+ const posts=calls.filter(c=>c.method==='POST');assert.equal(posts.length,1);assert.ok(posts[0].url.endsWith('/doacoes'));assert.deepEqual(JSON.parse(posts[0].body),{tipoItem:'Roupas',quantidade:3,pontoDestino:'Ponto A'});
  fireEvent.click(screen.getByRole('button',{name:'OK'}));await waitFor(()=>assert.equal(nav.voltas,1));
 });
 test('validação da doação também mostra aviso na web e não grava',async()=>{
  mockApi();mount(TelaCadastroDoacao);await screen.findByText('○ Ponto A');
+ await waitFor(()=>assert.equal(screen.getByRole('button',{name:'Cadastrar'}).getAttribute('aria-disabled'),null));
  fireEvent.click(screen.getByRole('button',{name:'Cadastrar'}));await screen.findByText('Preencha todos os campos.');
  assert.equal((await storage.listarDoacoes()).length,0);
  fireEvent.click(screen.getByRole('button',{name:'OK'}));
  await screen.findByRole('button',{name:'Cadastrar'});
-});
-test('exclusão de doação permite cancelar e só apaga após confirmação',async()=>{
- const doacao=await storage.salvarDoacao({tipoItem:'Alimentos',quantidade:2,pontoDestino:'Ponto A'});
- const nav=mount(TelaDetalheDoacao,{doacao});
- fireEvent.click(screen.getByRole('button',{name:'Excluir doação'}));await screen.findByText('Deseja excluir a doação de “Alimentos”?');
- fireEvent.click(screen.getByRole('button',{name:'Cancelar'}));await screen.findByRole('button',{name:'Excluir doação'});
- assert.equal((await storage.listarDoacoes()).length,1);assert.equal(nav.voltas,0);
- fireEvent.click(screen.getByRole('button',{name:'Excluir doação'}));fireEvent.click(await screen.findByRole('button',{name:'Excluir',exact:true}));
- await screen.findByText('Doação de “Alimentos” excluída.');assert.equal((await storage.listarDoacoes()).length,0);
- fireEvent.click(screen.getByRole('button',{name:'OK'}));await waitFor(()=>assert.equal(nav.voltas,1));
-});
-test('falha na exclusão da doação mostra erro e preserva o registro',async()=>{
- const doacao=await storage.salvarDoacao({tipoItem:'Roupas',quantidade:1,pontoDestino:'Ponto A'});
- storage.excluirDoacao=async()=>{throw new Error('disco indisponível');};const nav=mount(TelaDetalheDoacao,{doacao});
- fireEvent.click(screen.getByRole('button',{name:'Excluir doação'}));fireEvent.click(await screen.findByRole('button',{name:'Excluir',exact:true}));
- await screen.findByText('Não foi possível excluir a doação. Tente novamente.');assert.equal(nav.voltas,0);assert.equal((await storage.listarDoacoes()).length,1);
 });
 test('ponto valida campos e preserva texto quando a API recusa com 400',async()=>{
  const calls=mockApi((url,o)=>o.method==='POST'?new Response('',{status:400}):undefined);const nav=mount(TelaCadastroPonto);
@@ -129,4 +116,30 @@ test('Android/iOS mantém Alert.alert com Cancelar e Excluir e resolve a escolha
   fireEvent.click(screen.getByRole('button',{name:'Abrir'}));
   await act(async()=>alerts[1][2][1].onPress());assert.deepEqual(resultados,[false,true]);
  } finally {cleanup();Object.defineProperty(rn.Platform,'OS',descriptor);rn.Alert.alert=alertOriginal;}
+});
+
+for (const status of [400, 0]) test(`doação: falha ${status} preserva formulário e não grava localmente`, async()=>{
+ mockApi((url,o)=>{if(o.method==='POST'){if(!status)throw new TypeError('offline');return new Response('',{status});}});
+ const nav=mount(TelaCadastroDoacao);
+ fireEvent.change(screen.getByPlaceholderText('Ex.: roupas, alimentos'),{target:{value:'Roupas'}});
+ fireEvent.change(screen.getByPlaceholderText('Ex.: 5'),{target:{value:'3'}});
+ fireEvent.click(await screen.findByText('○ Ponto A'));fireEvent.click(screen.getByRole('button',{name:'Cadastrar'}));
+ await screen.findByText('Não foi possível salvar a doação. Seus dados continuam no formulário.');
+ assert.equal(screen.getByPlaceholderText('Ex.: roupas, alimentos').value,'Roupas');assert.equal(screen.getByPlaceholderText('Ex.: 5').value,'3');assert.equal(nav.voltas,0);assert.equal((await storage.listarDoacoes()).length,0);
+});
+test('histórico distingue carregando, erro, retry e vazio; filtro vai para API',async()=>{
+ let resolve;global.fetch=()=>new Promise(r=>resolve=r);mount(TelaHistoricoDoacoes);
+ assert.ok(screen.getByText('Carregando doações...'));
+ await act(async()=>resolve(new Response('',{status:500})));
+ await screen.findByText('Não foi possível concluir a solicitação (HTTP 500).');
+ assert.equal(screen.queryByText('Nenhuma doação cadastrada.'),null);
+ const calls=mockApi(()=>Response.json({content:[],page:{totalPages:0}}));
+ fireEvent.click(screen.getByText('Tentar novamente'));await screen.findByText('Nenhuma doação cadastrada.');
+ fireEvent.change(screen.getByLabelText('Buscar por tipo de item'),{target:{value:' Roupas '}});
+ await screen.findByText('Nenhuma doação encontrada para “Roupas”.');
+ assert.equal(new URL(calls.at(-1).url).searchParams.get('filtro'),'Roupas');
+});
+test('detalhe busca doação por UUID e trata 404 sem usar dados locais',async()=>{
+ const calls=mockApi(()=>new Response('',{status:404}));mount(TelaDetalheDoacao,{doacaoId:'uuid-doacao'});
+ await screen.findByText('Doação não encontrada.');assert.ok(calls[0].url.endsWith('/doacoes/uuid-doacao'));assert.equal(screen.queryByText('Excluir doação'),null);
 });
