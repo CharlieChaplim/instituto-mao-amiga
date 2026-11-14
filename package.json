@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "doctor": "npx --yes expo-doctor",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/n2-3.test.cjs tests/n2-4-ui.test.cjs"
+    "test": "node --test tests/n2-3.test.cjs tests/n2-4-ui.test.cjs tests/n2-6.test.cjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

@@ -7,3 +7,7 @@ export type Doacao = {
 };
 
 export type NovaDoacao = Omit<Doacao, 'id' | 'criadoEm'>;
+export type PaginaDoacoes = {
+  content: Doacao[];
+  page: { size: number; number: number; totalElements: number; totalPages: number };
+};
