@@ -1,17 +1,26 @@
-# Demonstração — estado N2-7 (até 3 minutos)
+# Demonstração final — até 3 minutos
 
-1. **0:00–0:35:** buscar um ponto por bairro; cadastrar um ponto de teste,
-   editar e excluir com confirmação.
-2. **0:35–1:10:** cadastrar uma doação, selecionando destino da API. Mostrar
-   o aviso e a nova doação no histórico; buscar por tipo.
-3. **1:10–1:55:** abrir a doação, editar a quantidade e salvar. Mostrar
-   detalhe atualizado, mesmo UUID/data, e histórico atualizado ao voltar.
-4. **1:55–2:20:** excluir a doação, cancelar primeiro e depois confirmar.
-   Mostrar que desaparece do histórico.
-5. **2:20–2:50:** no Swagger, POST inválido com quantidade zero (400) e
-   GET do UUID excluído (404).
-6. **2:50–3:00:** explicar que pontos/doações ficam no servidor H2; o app
-   centraliza HTTP em api.ts e recarrega as telas ao receber foco.
+## Preparação (antes de iniciar o cronômetro)
 
-Próxima etapa N2-8 (#23): acrescentar favoritos locais e ajustar este roteiro
-para demonstrá-los. Não apresentar favoritos como implementados nesta entrega.
+Ligue a API e o app, deixe Swagger aberto, prepare os corpos JSON válidos e um
+POST inválido. Tenha pelo menos um ponto disponível para destino e favorito.
+Use registros de demonstração para as exclusões. Ensaie a sequência.
+
+| Tempo | Ação |
+|---|---|
+| 0:00–0:40 | Buscar por bairro; cadastrar, editar e excluir um ponto de teste |
+| 0:40–1:00 | Marcar ♡ em outro ponto; abrir Meus pontos e mostrar ♥ |
+| 1:00–1:50 | Cadastrar doação; abrir histórico/detalhe; editar quantidade; mostrar ID/data preservados; excluir |
+| 1:50–2:35 | Swagger: POST de doação com quantidade 0 (400), GET do UUID excluído (404) |
+| 2:35–3:00 | Explicar a decisão técnica abaixo |
+
+## Explicação para dominar
+
+Pontos e doações ficam na API porque são os dados do sistema, com validação e
+persistência no H2. Favoritos são uma preferência local; o AsyncStorage guarda
+só UUIDs. Ao abrir Meus pontos, consultamos cada ID na API para obter os dados
+atuais. Se o ponto foi excluído, ignoramos seu 404 sem derrubar a tela. Um erro
+de rede não é tratado como exclusão: mostramos erro e permitimos tentar novamente.
+
+Na web, esse armazenamento é associado à origem do site. Em outro navegador,
+aparelho ou origem, a lista local de favoritos pode ser diferente.

@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFavoritos } from '../hooks/useFavoritos';
 import { PontoItem } from '../components/PontoItem';
 import { buscarPaginaPontos } from '../services/pontosService';
 import { criarPaginacaoPontos } from '../state/paginacaoPontos';
@@ -10,6 +11,7 @@ import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Lista'>;
 export function TelaListaPontos({ navigation }: Props) {
+  const favoritos = useFavoritos();
   const [busca, setBusca] = useState('');
   const [paginacao] = useState(() => criarPaginacaoPontos(buscarPaginaPontos));
   const { pontos, carregando, erro, temMais } = useSyncExternalStore(
@@ -26,6 +28,8 @@ export function TelaListaPontos({ navigation }: Props) {
       keyboardShouldPersistTaps="handled"
       onEndReached={() => { void paginacao.carregar(); }} onEndReachedThreshold={0.3}
       renderItem={({ item }) => <PontoItem ponto={item}
+        favorito={favoritos.ids.includes(item.id)} desabilitado={favoritos.carregando || favoritos.salvando || !!favoritos.erro}
+        onFavorito={() => { void favoritos.definir(item.id, !favoritos.ids.includes(item.id)); }}
         onPress={() => navigation.navigate('Detalhe', { pontoId: item.id })} />}
       ListHeaderComponent={<View>
         <Text style={styles.titulo}>Pontos de coleta e distribuição</Text>
@@ -38,6 +42,8 @@ export function TelaListaPontos({ navigation }: Props) {
         <TouchableOpacity style={styles.secundario} onPress={() => navigation.navigate('Historico')}>
           <Text>Minhas doações</Text>
         </TouchableOpacity>
+        <TouchableOpacity accessibilityRole="button" style={styles.secundario} onPress={() => navigation.navigate('MeusPontos')}><Text>Meus pontos</Text></TouchableOpacity>
+        {favoritos.erro ? <View><Text style={styles.erro}>{favoritos.erro}</Text><TouchableOpacity accessibilityRole="button" style={styles.secundario} onPress={() => void favoritos.tentarNovamente()}><Text>Recarregar favoritos</Text></TouchableOpacity></View> : null}
         <Text style={styles.rotulo}>Buscar por nome ou bairro</Text>
         <TextInput style={styles.input} value={busca} onChangeText={setBusca}
           placeholder="Ex.: Central" accessibilityLabel="Buscar por nome ou bairro"
