@@ -62,9 +62,9 @@ CORS está liberado como nos endpoints de pontos.
 ## Prints do Swagger — capturas recebidas
 
 As capturas recebidas estão no [README principal](../../README.md#evidências-do-swagger--n2-5-doações).
-A imagem de listagem mostra **500**, portanto ainda falta a captura 200 com
-`content` e `page`. Use `sort=criadoEm,desc`, sem colchetes nem aspas, ou omita
-esse parâmetro. Prints de doações não comprovam endpoints de pontos da N2-1.
+Atualização N2-7: a captura da listagem foi substituída e mostra HTTP 200,
+content vazio e page. A cobertura mínima de endpoints + um 400/404 está presente.
+Os testes adicionais de PUT abaixo continuam úteis para a conferência funcional.
 
 Roteiro para conferir e completar as evidências:
 

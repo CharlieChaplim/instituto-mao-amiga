@@ -1,431 +1,191 @@
-# Instituto Mão Amiga — estado atual N2-6
-
-Cadastro e histórico de doações agora usam a API. Consulte [N2-6](docs/n2-6/README.md).
-Os capítulos abaixo registram etapas anteriores; as notas de armazenamento local
-descrevem o comportamento anterior à N2-6.
-
-# N2-1 — CRUD de pontos na API (issue #16)
-
-Esta branch implementa apenas a primeira etapa da N2. A API fica em `api/`.
-O app ainda usa o contrato anterior (`/pontos`, ID numérico e campos antigos).
-Sua integração com `/api/v1/pontos` será feita na N2-3 (#18); nesta etapa,
-valide a API pelo Swagger. Doações e favoritos não foram alterados.
-
-## Executar a API
-
-Requisitos: Java 21 e acesso à internet no primeiro uso do Maven Wrapper.
-Abra um terminal na pasta `api/` e execute:
-
-```powershell
-# Windows PowerShell
-.\mvnw.cmd spring-boot:run
-```
-
-```bash
-# Linux/macOS (dispensa permissão de execução do script)
-bash mvnw spring-boot:run
-```
-
-Swagger: http://localhost:8080/swagger-ui/index.html
-OpenAPI: http://localhost:8080/v3/api-docs
-
-O H2 grava em `api/data/maoamiga.mv.db` quando o comando é executado em `api/`.
-Sempre inicie nessa pasta. `ddl-auto=update` preserva os dados; não apague o
-arquivo do banco para reiniciar a aplicação. Os arquivos do H2 são ignorados pelo Git.
-A carga inicial insere oito pontos demonstrativos em Goiânia somente se a tabela
-estiver vazia. Os locais não representam postos reais de doação confirmados.
-
-## Endpoints N2-1
-
-Base: `http://localhost:8080`.
-
-| Método | URL | Sucesso |
-|---|---|---|
-| GET | `/api/v1/pontos` | 200, lista de pontos |
-| GET | `/api/v1/pontos/{id}` | 200, ponto |
-| POST | `/api/v1/pontos` | 201, ponto criado e cabeçalho Location |
-| PUT | `/api/v1/pontos/{id}` | 200, ponto atualizado com mesmo ID |
-| DELETE | `/api/v1/pontos/{id}` | 204, sem corpo |
-
-GET, PUT e DELETE com UUID inexistente respondem 404. UUID malformado responde
-400. Campos obrigatórios ausentes, vazios ou em branco respondem 400. O tipo
-aceita somente `coleta` ou `distribuição`; campos de texto têm limite de 255
-caracteres. O controller recebe DTO validado com `@Valid` e devolve DTO, nunca a
-entidade. A listagem desta etapa não é paginada.
-
-Corpo para POST e PUT:
-
-```json
-{
-  "nome": "Ponto de teste N2",
-  "endereco": "Rua 3, Goiânia - GO",
-  "bairro": "Setor Central",
-  "horario": "Seg a Sex, 8h às 17h",
-  "tipo": "coleta"
-}
-```
-
-A resposta contém esses cinco campos e `id` (UUID gerado pelo servidor).
-
-## Testes e evidências de aceite
-
-Na pasta `api/`, execute `./mvnw.cmd test` no PowerShell ou `bash mvnw test` no
-Linux/macOS. Os testes usam H2 isolado em memória, sem alterar o banco local.
-Cobrem CRUD, UUID, campos vazios/ausentes, tipo inválido, ausência de gravação
-inválida, 404, CORS, OpenAPI e seed sem duplicação.
-
-**Situação desta entrega:** testes escritos, mas não executados neste ambiente,
-pois a resolução de `repo.maven.apache.org` falhou ao baixar dependências.
-Os prints do Swagger ainda precisam ser capturados em uma execução local real.
-Não fechar a issue antes de completar essas verificações.
-
-No Swagger, use “Try it out” e “Execute”:
-
-1. GET da lista: conferir pelo menos oito pontos e capturar a resposta 200.
-2. POST válido com o corpo acima: capturar 201 e copiar o UUID retornado.
-3. GET desse UUID: capturar 200.
-4. PUT desse UUID, alterando o nome: capturar 200 e conferir que o ID foi mantido.
-5. POST com `nome` vazio: capturar 400 e conferir que nenhum registro foi criado.
-6. PUT do UUID válido com `bairro` vazio: conferir 400 e que o registro não mudou.
-7. Reiniciar a API e consultar o ponto: conferir persistência e quantidade inalterada.
-8. DELETE do UUID criado: capturar 204.
-9. GET e PUT desse UUID excluído (PUT com corpo válido): capturar os 404.
-
-Salve os prints em `docs/n2-1/` e insira-os abaixo antes de concluir a issue.
-Cada print deve mostrar endpoint, código HTTP e corpo quando houver. Para 204,
-a ausência de corpo é esperada. Não há imagens simuladas nesta entrega.
-
-## Evidências do Swagger — N2-1: CRUD de pontos
-
-### GET — Listagem de pontos (200)
-
-![Listagem de pontos](docs/n2-1/listar-pontos.png)
-
-### POST — Cadastro de ponto (201)
-
-![Cadastro de ponto](docs/n2-1/criar-ponto.png)
-
-### GET — Consulta por UUID (200)
-
-![Consulta de ponto por UUID](docs/n2-1/buscar-ponto.png)
-
-### PUT — Atualização de ponto (200)
-
-![Atualização de ponto](docs/n2-1/editar-ponto.png)
-
-### DELETE — Exclusão de ponto (204)
-
-![Exclusão de ponto](docs/n2-1/excluir-ponto.png)
-
-### POST — Dados inválidos (400)
-
-![Validação dos dados do ponto](docs/n2-1/post-invalido.png)
-
-### GET — Ponto não encontrado (404)
-
-![Ponto não encontrado](docs/n2-1/nao-encontrado.png)
-
----
-
-## Referência histórica do app (antes da integração N2-3)
-
-Os endpoints e o modelo descritos abaixo pertencem à versão anterior e não são
-compatíveis com esta API N2-1. Permanecem como referência para a próxima etapa.
-
 # Instituto Mão Amiga
 
-Aplicativo individual Expo + React Native + TypeScript com API própria de pontos de coleta e distribuição em Spring Boot.
-
-## Funcionalidades
-
-- lista paginada e detalhe de pontos obtidos da API;
-- erro amigável quando a API não responde e estado 404 no detalhe;
-- cadastro de doações com validação e seleção de pontos da API;
-- histórico persistente de doações salvas no aparelho, com edição, exclusão, filtro e totais por tipo.
-
-## Estrutura
-
-- `api/`: API Spring Boot, JPA e H2;
-- `src/types/`: tipos TypeScript de pontos, doações e rotas;
-- `src/services/api.ts`: único acesso ao `fetch`, incluindo a URL da API;
-- `src/services/pontosService.ts`: listagem paginada e consulta de ponto;
-- `src/services/doacoesStorage.ts`: persistência local de doações;
-- `src/screens/`: interface do usuário;
-- `src/navigation/`: rotas tipadas.
+Aplicativo Expo, React Native e TypeScript, com API Spring Boot e banco H2 em
+arquivo. Estado atual: **N2-7 — edição e exclusão de doações pela API (#22)**.
 
 ## Executar
 
-Java 21 + Maven, Node.js/npm e ambiente Expo instalados.
+Requisitos: JDK 21, Node.js compatível com o Expo 57 e npm. O Maven Wrapper
+baixa o Maven e as dependências no primeiro uso.
 
-1. Em um terminal: `cd api && mvn spring-boot:run`.
-2. Ajuste `API_URL` em `src/services/api.ts` para apontar à máquina que roda a API. Android Emulator: `http://10.0.2.2:8080`; web/iOS simulator: `http://localhost:8080`; celular físico: `http://IP_DO_COMPUTADOR:8080` na mesma rede Wi-Fi.
-3. Na raiz: `npm ci && npm start`.
+Em um terminal, na pasta `api/`:
 
-## Verificações
+```bat
+mvnw.cmd spring-boot:run
+```
 
-- `npx tsc --noEmit`
-- `cd api && mvn test`
-- `curl "http://localhost:8080/pontos?page=0&size=3&sort=nome,asc"`
-- `curl -i http://localhost:8080/pontos/999999` (404)
+Linux/macOS: `bash mvnw spring-boot:run`.
+Use uma única instância da API. Se iniciou com `spring-boot:start`, use
+`mvnw.cmd spring-boot:stop` antes de iniciar outra.
 
-Os 8 registros iniciais são dados **demonstrativos** com locais de referência em Goiânia. Não indicam que há postos reais de doação nestes lugares. A API é apenas de consulta; as doações permanecem no aparelho na chave antiga do AsyncStorage.
+Na raiz, em outro terminal:
 
-A integração anterior foi entregue na issue #14. A N2-1 corresponde à issue #16.
+```bat
+npm ci
+npx expo start --web --clear
+```
 
+Para Expo Go: `npm start`. Ajuste apenas `src/services/api.ts`:
 
-# N2-2 — Busca de pontos com paginação (issue #17)
+| Ambiente | API_URL |
+|---|---|
+| Web no computador / simulador iOS | `http://localhost:8080/api/v1` |
+| Android Emulator | `http://10.0.2.2:8080/api/v1` |
+| Celular físico na mesma rede | `http://IP_DO_COMPUTADOR:8080/api/v1` |
 
-Esta seção atualiza a referência N2-1 acima. `GET /api/v1/pontos` continua
-retornando a lista completa; o endpoint novo de busca é
-`GET /api/v1/pontos/filtro?filtro=...&page=0&size=10`.
+Swagger: http://localhost:8080/swagger-ui/index.html
 
-- Busca com `@Query` pelo nome **ou** bairro, sem diferenciar maiúsculas.
-- Filtro ausente, vazio ou só com espaços retorna todos os pontos paginados.
-- `@PageableDefault`: 10 itens, primeira página `0`, ordem por nome crescente.
-- `sort=bairro,asc` troca a ordenação; `page=1` pede a segunda página.
-- Retorno `Page<PontoResponseDTO>` serializado como `content` + `page`.
-- A propriedade `spring.data.web.pageable.serialization-mode=via_dto` é mantida;
-  `PaginacaoConfig` também habilita explicitamente `VIA_DTO`.
-- 25 pontos de demonstração: oito anteriores e 17 novos, com bairros de Goiânia.
-  Endereços dos pontos adicionais são fictícios, identificados como demonstrativos.
-- Carga versionada em `cargas_iniciais`: atualiza o banco da N2-1 sem apagar os
-  registros existentes. Nomes originais já presentes são preservados com seus IDs.
-  A carga roda uma vez; reiniciar não duplica nem recria pontos apagados depois dela.
-  Se um ponto original foi renomeado antes da atualização, o ponto demonstrativo
-  com o nome original poderá ser inserido, preservando o registro renomeado.
-- O app ainda será integrado na N2-3 (#18). Esta etapa altera apenas a API.
+OpenAPI: http://localhost:8080/v3/api-docs
 
-## Três chamadas e respostas verificadas
+O banco fica em `api/data/maoamiga.mv.db` quando a API é iniciada em `api/`.
+Não apague `api/data/`. A carga versionada insere 25 pontos demonstrativos de
+Goiânia sem duplicar a cada reinício. Não representam postos reais confirmados.
 
-Respostas reais capturadas por MockMvc nos testes de integração com H2 isolado
-em memória e a carga inicial de 25 pontos. Usamos `size=1` para mostrar cada
-corpo completo; os UUIDs serão diferentes no banco local. Sem `size`, o padrão
-continua sendo **10**. Esses registros não são prints do Swagger.
+## Funcionalidades
 
-### Sem filtro
+- Pontos: lista paginada, busca por nome/bairro, detalhe, cadastro, edição e exclusão.
+- Doações: cadastro, histórico paginado, filtro por tipo, detalhe por UUID,
+  edição no mesmo formulário e exclusão com confirmação.
+- O destino é escolhido entre pontos da API; a doação armazena seu nome.
+- Edição envia PUT sem ID/data no corpo; o servidor preserva UUID e criadoEm.
+- Detalhe e histórico recarregam ao receber foco, refletindo alterações e exclusões.
+- Falhas mostram aviso e preservam os dados digitados. A navegação ocorre depois
+  da resposta de sucesso e da confirmação do aviso.
+- Android/iOS usam Alert.alert; web usa os diálogos da aplicação, com Cancelar/Excluir.
 
-GET `http://localhost:8080/api/v1/pontos/filtro?size=1`
+Doações antigas no aparelho não são migradas nem apagadas; o app usa a API.
+Favoritos locais são a próxima etapa, N2-8 (#23), ainda não implementada.
 
-Resposta verificada: HTTP 200.
+## Endpoints
+
+Base: `http://localhost:8080`. UUID inexistente em GET/PUT/DELETE retorna 404;
+dados inválidos retornam 400. DELETE bem-sucedido retorna 204, sem corpo.
+
+| Método | URL | Sucesso |
+|---|---|---|
+| GET | `/api/v1/pontos` | 200, lista completa |
+| GET | `/api/v1/pontos/filtro?filtro=Central&page=0&size=10` | 200, content/page |
+| GET | `/api/v1/pontos/{id}` | 200 |
+| POST | `/api/v1/pontos` | 201 |
+| PUT | `/api/v1/pontos/{id}` | 200 |
+| DELETE | `/api/v1/pontos/{id}` | 204 |
+| GET | `/api/v1/doacoes/filtro?filtro=roupa&page=0&size=10` | 200, content/page |
+| GET | `/api/v1/doacoes/{id}` | 200 |
+| POST | `/api/v1/doacoes` | 201 |
+| PUT | `/api/v1/doacoes/{id}` | 200 |
+| DELETE | `/api/v1/doacoes/{id}` | 204 |
+
+Corpo de POST/PUT de ponto:
 
 ```json
-{
-  "content": [
-    {
-      "id": "9501a4f5-4a89-4227-9843-fda6549d5255",
-      "nome": "Campinas (demonstração)",
-      "endereco": "Av. 24 de Outubro, Goiânia - GO",
-      "bairro": "Campinas",
-      "horario": "Seg a Sex, 8h às 17h",
-      "tipo": "distribuição"
-    }
-  ],
-  "page": {
-    "size": 1,
-    "number": 0,
-    "totalElements": 25,
-    "totalPages": 25
-  }
-}
+{"nome":"Ponto de teste","endereco":"Rua 3, Goiânia - GO","bairro":"Setor Central","horario":"8h às 17h","tipo":"coleta"}
 ```
 
-### Filtrando por bairro
-
-GET `http://localhost:8080/api/v1/pontos/filtro?filtro=Setor%20Central&size=1`
-
-Resposta verificada: HTTP 200.
+Corpo de POST/PUT de doação:
 
 ```json
-{
-  "content": [
-    {
-      "id": "162d623a-e04f-4b13-850e-30b95022a026",
-      "nome": "Mercado Central (demonstração)",
-      "endereco": "Rua 3, Goiânia - GO",
-      "bairro": "Setor Central",
-      "horario": "Seg a Sex, 8h às 17h",
-      "tipo": "coleta"
-    }
-  ],
-  "page": {
-    "size": 1,
-    "number": 0,
-    "totalElements": 2,
-    "totalPages": 2
-  }
-}
+{"tipoItem":"Alimentos","quantidade":3,"pontoDestino":"Ponto de teste"}
 ```
 
-### Segunda página
+No Swagger, o campo pageable pode ser preenchido com `{"page":0,"size":10}`.
+Omitir sort usa a ordenação padrão: nome crescente para pontos, criadoEm
+decrescente para doações. Evite enviar aspas/colchetes como texto no parâmetro
+sort da URL. O app envia parâmetros de ordenação separados corretamente.
 
-GET `http://localhost:8080/api/v1/pontos/filtro?page=1&size=1`
+## Testes
 
-Resposta verificada: HTTP 200.
+Na raiz: `npm run typecheck` e `npm test`. Na pasta api: `mvnw.cmd test`
+(ou `bash mvnw test`). Os testes de backend usam H2 isolado em memória.
 
-```json
-{
-  "content": [
-    {
-      "id": "162d623a-e04f-4b13-850e-30b95022a026",
-      "nome": "Mercado Central (demonstração)",
-      "endereco": "Rua 3, Goiânia - GO",
-      "bairro": "Setor Central",
-      "horario": "Seg a Sex, 8h às 17h",
-      "tipo": "coleta"
-    }
-  ],
-  "page": {
-    "size": 1,
-    "number": 1,
-    "totalElements": 25,
-    "totalPages": 25
-  }
-}
-```
+Veja [validação N2-7](docs/n2-7/VALIDACAO.md),
+[roteiro de aceite](docs/n2-7/README.md) e
+[roteiro de demonstração](ROTEIRO-DEMONSTRACAO.md).
 
-## Validação da N2-2
+## Evidências do Swagger — N2-1: pontos
 
-Na pasta `api/`, com Java 21:
+Capturas reais enviadas pelo autor. Considere Server response, não Example Value.
 
-```powershell
-.\mvnw.cmd clean test
-.\mvnw.cmd spring-boot:run
-```
+### GET lista — 200
 
-No Linux/macOS: `bash mvnw clean test` e `bash mvnw spring-boot:run`.
+![GET lista — 200](docs/n2-1/listar-pontos.png)
 
-1. Abra `http://localhost:8080/api/v1/pontos/filtro`: confira `page.size=10` e,
-   com a carga original, `totalElements=25`, `totalPages=3` e `number=0`.
-2. Compare `?filtro=mercado` com `?filtro=MERCADO`: mesmos resultados.
-3. Execute as três chamadas documentadas acima e registre as respostas reais.
-4. Confira `?sort=bairro,asc`, `?page=1` e `?page=2` (última página com cinco itens
-   se o banco contiver somente os 25 pontos iniciais).
-5. Reinicie a API: a quantidade não deve crescer. Não apague `api/data/`.
-6. Teste novamente o CRUD da N2-1.
+### POST — 201
 
-`PontoFiltroTest` cobre paginação, ordenação, filtros, resposta vazia, atualização
-da carga de oito para 25 registros, preservação de IDs e reinício sem recriação
-após exclusão. `PontoControllerTest` continua cobrindo o CRUD da N2-1.
-
-Para gravar as três respostas reais em `docs/n2-2/`, execute **na raiz**:
-
-```powershell
-New-Item -ItemType Directory -Force docs/n2-2 | Out-Null
-curl.exe --fail "http://localhost:8080/api/v1/pontos/filtro?size=1" -o docs/n2-2/sem-filtro.json
-curl.exe --fail "http://localhost:8080/api/v1/pontos/filtro?filtro=Setor%20Central&size=1" -o docs/n2-2/por-bairro.json
-curl.exe --fail "http://localhost:8080/api/v1/pontos/filtro?page=1&size=1" -o docs/n2-2/segunda-pagina.json
-```
-
-Depois da captura: [sem filtro](docs/n2-2/sem-filtro.json),
-[por bairro](docs/n2-2/por-bairro.json) e [segunda página](docs/n2-2/segunda-pagina.json).
-Os arquivos incluídos foram gerados pelos testes de integração; os comandos acima
-permitem substituí-los pelas respostas da sua execução local.
-
-## Resultado da validação desta entrega
-
-10 testes passaram (5 de CRUD e 5 da N2-2), sem falhas, erros ou testes ignorados,
-com JDK 21.0.13. Relatório: [VALIDACAO.md](docs/n2-2/VALIDACAO.md).
-A nota anterior sobre testes não executados descreve a entrega original da N2-1;
-a suíte de CRUD foi executada com sucesso nesta entrega.
-
-
-# N2-3 — App integrado à API (#18)
-
-A lista e o detalhe do app já usam `/api/v1/pontos`, UUID e o novo modelo.
-Esta seção substitui os avisos anteriores de incompatibilidade do app.
-Busca por nome/bairro e rolagem infinita usam `/api/v1/pontos/filtro`.
-A URL é configurada apenas em `src/services/api.ts`, incluindo `/api/v1`.
-As doações continuam locais nesta etapa.
-
-Veja [execução, configuração de IP e testes da N2-3](docs/n2-3/README.md) e
-[resultado da validação](docs/n2-3/VALIDACAO.md).
-
-
-# N2-4 — CRUD de pontos e avisos corrigidos (#19)
-
-O app permite cadastrar, editar e excluir pontos pela API. Cadastro e edição
-reutilizam o mesmo formulário, e exclusões pedem confirmação.
-Os avisos de sucesso, validação e exclusão de doações agora funcionam na web por
-meio de diálogos da aplicação; Android/iOS continuam usando Alert.alert.
-Doações permanecem no AsyncStorage nesta etapa.
-
-Execute `npm ci`, `npm run typecheck` e `npm test`. Com a API ligada,
-execute `npx expo start --web --clear` na raiz.
-
-Veja [funcionalidades e roteiro de aceite](docs/n2-4/README.md) e
-[validação: 17 testes passaram](docs/n2-4/VALIDACAO.md).
-
-
-# N2-5 — CRUD de doações na API (#20)
-
-A API agora possui cadastro, detalhe, edição, exclusão e busca paginada de
-doações em `/api/v1/doacoes`. Valida quantidade positiva e campos obrigatórios,
-gera UUID/data no servidor e preserva ambos na edição. A integração do app
-permanece para N2-6 e N2-7.
-
-Veja [endpoints, exemplos e roteiro de prints do Swagger](docs/n2-5/README.md).
-As capturas recebidas estão abaixo; a listagem 200 ainda precisa ser refeita.
-Resultado dos testes: [VALIDACAO.md](docs/n2-5/VALIDACAO.md).
-
-
-## Evidências do Swagger — N2-5 (doações)
-
-Capturas reais fornecidas pelo autor. Confira o **Server response**: a seção
-“Example Value” do Swagger é apenas exemplo e não comprova a resposta obtida.
-
-### POST válido — 201
-
-![Doação criada, POST 201](docs/n2-5/post-doacao.png)
+![POST — 201](docs/n2-1/criar-ponto.png)
 
 ### GET por UUID — 200
 
-![Consulta da doação, GET 200](docs/n2-5/buscar-doacao.png)
+![GET por UUID — 200](docs/n2-1/buscar-ponto.png)
 
-### PUT — 200, quantidade 5
+### PUT — 200
 
-![Atualização da doação, PUT 200](docs/n2-5/editar-doacao.png)
+![PUT — 200](docs/n2-1/editar-ponto.png)
 
-### DELETE — 204, sem corpo
+### DELETE — 204
 
-![Exclusão da doação, DELETE 204](docs/n2-5/excluir-doacao.png)
+![DELETE — 204](docs/n2-1/excluir-ponto.png)
 
 ### POST inválido — 400
 
-![Validação da doação, POST 400](docs/n2-5/validacao.png)
+![POST inválido — 400](docs/n2-1/post-invalido.png)
 
-### GET de UUID excluído — 404
+### GET inexistente — 404
 
-![Doação não encontrada, GET 404](docs/n2-5/nao-encontrada.png)
+![GET inexistente — 404](docs/n2-1/nao-encontrado.png)
 
-### GET paginado — captura atual com erro 500 (pendente corrigir)
+## Evidências do Swagger — N2-5: doações
 
-![Listagem com resposta 500, não comprova sucesso](docs/n2-5/listar-doacoes.png)
+### POST — 201
 
-A URL da captura contém `sort=["criadoEm,desc"]` codificado. Refaça a chamada
-com `sort=criadoEm,desc` (sem colchetes nem aspas), ou omita `sort` para usar
-a ordem padrão. URL para conferir:
-`http://localhost:8080/api/v1/doacoes/filtro?page=0&size=10&sort=criadoEm,desc`.
-No Swagger, preencha o item do campo `sort` com `criadoEm,desc`.
-Substitua `docs/n2-5/listar-doacoes.png` quando o **Server response** mostrar
-200 e o corpo real contiver `content` e `page`; então atualize esta legenda.
-Os prints recebidos também não documentam PUT inválido (400) nem PUT após
-exclusão (404); esses casos continuam no roteiro de conferência local.
+![POST — 201](docs/n2-5/post-doacao.png)
 
-# N2-6 — Cadastro e histórico de doações pela API (#21)
+### GET paginado — 200
 
-O cadastro envia POST após validação; erro preserva os campos e sucesso mostra
-aviso antes de voltar. Os destinos vêm de GET `/api/v1/pontos`, e seu nome é
-salvo na doação. O histórico usa FlatList, UUID como chave, páginas de 10 itens,
-filtro por tipo na API e ordem de criação decrescente. Ao receber foco, busca
-novamente a primeira página; uma doação nova aparece no topo se corresponder
-ao filtro ativo. Há estados separados de carregamento, erro com nova tentativa
-e lista vazia. O detalhe consulta a doação pelo UUID.
+![GET paginado — 200](docs/n2-5/listar-doacoes.png)
 
-Nenhuma tela usa o armazenamento local de doações. Dados antigos permanecem
-no aparelho, sem migração automática; o histórico agora mostra os dados da API.
-Edição/exclusão no app ficam para N2-7 (#22), conforme o escopo da issue #21.
-O serviço já oferece os métodos PUT e DELETE necessários à próxima etapa.
+### GET por UUID — 200
 
-Veja [execução e aceite N2-6](docs/n2-6/README.md).
-As seções N2-1 a N2-5 acima registram as etapas anteriores; esta seção descreve
-o comportamento atual das doações no app.
+![GET por UUID — 200](docs/n2-5/buscar-doacao.png)
+
+### PUT — 200
+
+![PUT — 200](docs/n2-5/editar-doacao.png)
+
+### DELETE — 204
+
+![DELETE — 204](docs/n2-5/excluir-doacao.png)
+
+### POST inválido — 400
+
+![POST inválido — 400](docs/n2-5/validacao.png)
+
+### GET inexistente — 404
+
+![GET inexistente — 404](docs/n2-5/nao-encontrada.png)
+
+A listagem de doações agora mostra 200, content vazio e metadados page. É uma
+resposta válida de banco sem doações, não demonstra várias páginas ou filtro.
+
+## Revisão das evidências
+
+As capturas cobrem os endpoints de N2-1 e N2-5, incluindo um 400 e um 404 em
+cada grupo. Não faltam imagens para essa cobertura mínima. Não localizamos
+prints de PUT inválido (400) nem PUT de UUID inexistente (404) para pontos ou
+doações; são evidências adicionais recomendadas para os critérios funcionais,
+não uma nova exigência de print de cada combinação de método/status.
+N2-7 não exige explicitamente prints; o roteiro manual documenta como validar.
+Veja [auditoria de organização e evidências](docs/n2-7/AUDITORIA.md).
+
+## Organização
+
+- api/: controllers, DTOs, services, repositories, entidades e testes Java.
+- src/services/api.ts: acesso HTTP centralizado e URL da API.
+- src/services/: operações de pontos e doações na API.
+- src/state/: controle de paginação e descarte de respostas antigas.
+- src/screens/, components/, contexts/, navigation/, types/: interface e contratos.
+- tests/: testes automatizados TypeScript/UI em Node e JSDOM.
+- docs/: evidências reais e registros das etapas anteriores.
+
+Documentação histórica: [N2-2](docs/n2-2/VALIDACAO.md),
+[N2-3](docs/n2-3/README.md), [N2-4](docs/n2-4/README.md),
+[N2-5](docs/n2-5/README.md), [N2-6](docs/n2-6/README.md).

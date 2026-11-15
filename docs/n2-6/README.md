@@ -26,13 +26,9 @@ localhost pelo IP do computador na mesma rede; Android Emulator usa 10.0.2.2.
 8. Abra uma doação pelo histórico: o detalhe consulta seu UUID pela API.
 9. Reinicie a API e confirme persistência. Não apague `api/data/`.
 
-Edição e exclusão de doações na interface ficam para #22. O detalhe é somente
-consulta nesta etapa. As funções de serviço editar/excluir já estão prontas.
-O arquivo doacoesStorage.ts é legado sem uso nas telas; não apagamos dados
-locais nem fazemos migração automática.
+## Atualização N2-7
 
-## Evidências
-
-Os prints de Swagger enviados pelo autor estão organizados no README principal.
-O print de listagem 500 precisa ser substituído por 200. Os prints da N2-1 são
-de endpoints diferentes e continuam pendentes.
+Edição/exclusão agora implementadas pela API. O helper local sem uso foi removido;
+os dados antigos do aparelho não foram apagados nem migrados.
+As capturas de pontos já foram recebidas e a listagem de doações agora mostra 200.
+Veja o README principal para o comportamento e as evidências atuais.
