@@ -1,7 +1,7 @@
 # Instituto Mão Amiga
 
 Aplicativo Expo, React Native e TypeScript, com API Spring Boot e banco H2 em
-arquivo. Estado atual: **N2-7 — edição e exclusão de doações pela API (#22)**.
+arquivo. Estado atual: **N2-8 — favoritos e entrega final (#23)**.
 
 ## Executar
 
@@ -54,7 +54,14 @@ Goiânia sem duplicar a cada reinício. Não representam postos reais confirmado
 - Android/iOS usam Alert.alert; web usa os diálogos da aplicação, com Cancelar/Excluir.
 
 Doações antigas no aparelho não são migradas nem apagadas; o app usa a API.
-Favoritos locais são a próxima etapa, N2-8 (#23), ainda não implementada.
+Favoritos ficam no AsyncStorage, somente como UUIDs. O botão ♡/♥ tem área mínima
+44×44. A tela Meus pontos consulta cada UUID na API, ignora pontos excluídos
+(404) e permite desmarcar. Falhas de conexão mostram erro com nova tentativa.
+
+Decisão técnica: pontos/doações são dados compartilhados e persistem na API;
+favoritos são uma preferência deste aparelho/navegador. Salvar só IDs evita
+mostrar uma cópia desatualizada do nome/endereço do ponto. Na web, mantenha a
+mesma origem (protocolo, host e porta) para usar o mesmo armazenamento local.
 
 ## Endpoints
 
@@ -97,13 +104,87 @@ sort da URL. O app envia parâmetros de ordenação separados corretamente.
 Na raiz: `npm run typecheck` e `npm test`. Na pasta api: `mvnw.cmd test`
 (ou `bash mvnw test`). Os testes de backend usam H2 isolado em memória.
 
-Veja [validação N2-7](docs/n2-7/VALIDACAO.md),
-[roteiro de aceite](docs/n2-7/README.md) e
-[roteiro de demonstração](ROTEIRO-DEMONSTRACAO.md).
+Os testes de interface usam React Native Web em JSDOM, com HTTP simulado.
+A validação visual no navegador/celular não está registrada neste repositório.
+
+## N2-2 — três chamadas e respostas
+
+Exemplos reais já registrados pelos testes de integração com H2 isolado.
+UUIDs e totais podem mudar no seu banco. size=1 deixa cada exemplo compacto;
+o padrão sem size permanece 10.
+
+### Sem filtro
+
+GET `http://localhost:8080/api/v1/pontos/filtro?size=1` — 200.
+
+```json
+{
+  "content" : [ {
+    "id" : "9501a4f5-4a89-4227-9843-fda6549d5255",
+    "nome" : "Campinas (demonstração)",
+    "endereco" : "Av. 24 de Outubro, Goiânia - GO",
+    "bairro" : "Campinas",
+    "horario" : "Seg a Sex, 8h às 17h",
+    "tipo" : "distribuição"
+  } ],
+  "page" : {
+    "size" : 1,
+    "number" : 0,
+    "totalElements" : 25,
+    "totalPages" : 25
+  }
+}
+```
+
+### Por bairro
+
+GET `http://localhost:8080/api/v1/pontos/filtro?filtro=Setor%20Central&size=1` — 200.
+
+```json
+{
+  "content" : [ {
+    "id" : "162d623a-e04f-4b13-850e-30b95022a026",
+    "nome" : "Mercado Central (demonstração)",
+    "endereco" : "Rua 3, Goiânia - GO",
+    "bairro" : "Setor Central",
+    "horario" : "Seg a Sex, 8h às 17h",
+    "tipo" : "coleta"
+  } ],
+  "page" : {
+    "size" : 1,
+    "number" : 0,
+    "totalElements" : 2,
+    "totalPages" : 2
+  }
+}
+```
+
+### Segunda página
+
+GET `http://localhost:8080/api/v1/pontos/filtro?page=1&size=1` — 200.
+
+```json
+{
+  "content" : [ {
+    "id" : "162d623a-e04f-4b13-850e-30b95022a026",
+    "nome" : "Mercado Central (demonstração)",
+    "endereco" : "Rua 3, Goiânia - GO",
+    "bairro" : "Setor Central",
+    "horario" : "Seg a Sex, 8h às 17h",
+    "tipo" : "coleta"
+  } ],
+  "page" : {
+    "size" : 1,
+    "number" : 1,
+    "totalElements" : 25,
+    "totalPages" : 25
+  }
+}
+```
 
 ## Evidências do Swagger — N2-1: pontos
 
-Capturas reais enviadas pelo autor. Considere Server response, não Example Value.
+Respostas dos endpoints capturadas no Swagger.
 
 ### GET lista — 200
 
@@ -166,16 +247,6 @@ Capturas reais enviadas pelo autor. Considere Server response, não Example Valu
 A listagem de doações agora mostra 200, content vazio e metadados page. É uma
 resposta válida de banco sem doações, não demonstra várias páginas ou filtro.
 
-## Revisão das evidências
-
-As capturas cobrem os endpoints de N2-1 e N2-5, incluindo um 400 e um 404 em
-cada grupo. Não faltam imagens para essa cobertura mínima. Não localizamos
-prints de PUT inválido (400) nem PUT de UUID inexistente (404) para pontos ou
-doações; são evidências adicionais recomendadas para os critérios funcionais,
-não uma nova exigência de print de cada combinação de método/status.
-N2-7 não exige explicitamente prints; o roteiro manual documenta como validar.
-Veja [auditoria de organização e evidências](docs/n2-7/AUDITORIA.md).
-
 ## Organização
 
 - api/: controllers, DTOs, services, repositories, entidades e testes Java.
@@ -184,8 +255,17 @@ Veja [auditoria de organização e evidências](docs/n2-7/AUDITORIA.md).
 - src/state/: controle de paginação e descarte de respostas antigas.
 - src/screens/, components/, contexts/, navigation/, types/: interface e contratos.
 - tests/: testes automatizados TypeScript/UI em Node e JSDOM.
-- docs/: evidências reais e registros das etapas anteriores.
+- docs/: capturas do Swagger e exemplos de respostas da API.
 
-Documentação histórica: [N2-2](docs/n2-2/VALIDACAO.md),
-[N2-3](docs/n2-3/README.md), [N2-4](docs/n2-4/README.md),
-[N2-5](docs/n2-5/README.md), [N2-6](docs/n2-6/README.md).
+## Demonstração final — até 3 minutos
+
+| Tempo | Ação |
+|---|---|
+| 0:00–0:40 | Buscar ponto por bairro, cadastrar ponto de teste, editar e excluir |
+| 0:40–1:00 | Favoritar outro ponto, abrir Meus pontos e mostrar o coração marcado |
+| 1:00–1:50 | Cadastrar doação, abrir histórico/detalhe, editar quantidade e excluir com confirmação |
+| 1:50–2:35 | Mostrar no Swagger POST inválido 400 e GET de UUID excluído 404 |
+| 2:35–3:00 | Explicar favoritos locais por ID versus pontos/doações no servidor |
+
+Deixe API e app ligados e o Swagger aberto antes de começar. Ensaie o tempo.
+O [roteiro detalhado](ROTEIRO-DEMONSTRACAO.md) inclui preparação e explicação.

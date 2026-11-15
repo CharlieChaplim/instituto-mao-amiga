@@ -6,6 +6,7 @@ import { TelaCadastroDoacao } from '../screens/TelaCadastroDoacao';
 import { TelaDetalheDoacao } from '../screens/TelaDetalheDoacao';
 import { TelaDetalhePonto } from '../screens/TelaDetalhePonto';
 import { TelaHistoricoDoacoes } from '../screens/TelaHistoricoDoacoes';
+import { TelaMeusPontos } from '../screens/TelaMeusPontos';
 import { TelaListaPontos } from '../screens/TelaListaPontos';
 
 import { RootStackParamList } from '../types/navigation';
@@ -17,6 +18,7 @@ export function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Lista">
+        <Stack.Screen name="MeusPontos" component={TelaMeusPontos} options={{ title: 'Meus pontos' }} />
         <Stack.Screen
           name="Lista"
           component={TelaListaPontos}

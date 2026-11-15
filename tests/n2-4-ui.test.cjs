@@ -205,3 +205,32 @@ for(const Component of [TelaDetalheDoacao,TelaHistoricoDoacoes]) test(`${Compone
  await screen.findByText('Cobertores');assert.equal(screen.queryByText('Roupas'),null);
  if(Component===TelaHistoricoDoacoes){view.rerender(tree(false));atual=null;view.rerender(tree(true));await screen.findByText('Nenhuma doação cadastrada.');assert.equal(screen.queryByText('Cobertores'),null);}
 });
+
+const {TelaListaPontos}=require('../src/screens/TelaListaPontos.tsx');
+const {TelaMeusPontos}=require('../src/screens/TelaMeusPontos.tsx');
+const {favoritos}=require('../src/services/favoritosService.ts');
+const {CHAVE_FAVORITOS}=require('../src/state/favoritos.ts');
+test('coração salva somente ID, não abre detalhe, e Meus pontos permite desmarcar',async()=>{
+ const calls=mockApi((url,o)=>url.includes('/filtro')?Response.json({content:[ponto],page:{totalPages:1}}):undefined);
+ const nav=mount(TelaListaPontos);
+ const heart=await screen.findByRole('button',{name:'Favoritar Ponto A'});
+ await waitFor(()=>assert.equal(heart.getAttribute('aria-disabled'),null));fireEvent.click(heart);
+ await screen.findByRole('button',{name:'Desmarcar Ponto A'});assert.equal(nav.destinos.length,0);
+ assert.deepEqual(JSON.parse(window.localStorage.getItem(CHAVE_FAVORITOS)),[ponto.id]);
+ fireEvent.click(screen.getByRole('button',{name:'Meus pontos'}));assert.deepEqual(nav.destinos,[['MeusPontos']]);
+ cleanup();mount(TelaMeusPontos);await screen.findByText('Ponto A');
+ assert.ok(calls.some(c=>c.url.endsWith('/pontos/'+ponto.id)));
+ fireEvent.click(screen.getByRole('button',{name:'Desmarcar Ponto A'}));
+ await screen.findByText('Nenhum ponto favorito disponível. Marque ♡ na lista de pontos.');
+ assert.deepEqual(JSON.parse(window.localStorage.getItem(CHAVE_FAVORITOS)),[]);
+});
+test('Meus pontos ignora 404, distingue erro de conexão e recupera com retry',async()=>{
+ await favoritos.definir('removido',true);await favoritos.definir('existe',true);
+ let offline=true;
+ mockApi((url)=>{if(url.endsWith('/removido'))return new Response('',{status:404});if(offline)throw new TypeError('offline');return Response.json({...ponto,id:'existe'});});
+ mount(TelaMeusPontos);await screen.findByText('Não foi possível carregar todos os favoritos. Verifique a API e tente novamente.');
+ assert.equal(screen.queryByText('Nenhum ponto favorito disponível. Marque ♡ na lista de pontos.'),null);
+ offline=false;fireEvent.click(screen.getByRole('button',{name:'Tentar novamente'}));await screen.findByText('Ponto A');
+ assert.equal(screen.queryByText('Não foi possível carregar todos os favoritos. Verifique a API e tente novamente.'),null);
+ cleanup();await favoritos.definir('removido',false);await favoritos.definir('existe',false);
+});
